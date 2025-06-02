@@ -1,0 +1,11 @@
+<CORSConfiguration>
+<CORSRule>
+   <AllowedOrigin>*</AllowedOrigin>
+   <AllowedMethod>PUT</AllowedMethod>
+   <AllowedMethod>POST</AllowedMethod>
+   <AllowedMethod>DELETE</AllowedMethod>
+   <AllowedHeader>*</AllowedHeader>
+   <MaxAgeSeconds>3000</MaxAgeSeconds>
+   <ExposeHeader>x-server-side-encryption</ExposeHeader>
+</CORSRule>
+</CORSConfiguration>
