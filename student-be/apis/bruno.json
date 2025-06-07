@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "aminedu/studentbe",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

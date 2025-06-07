@@ -1,0 +1,19 @@
+meta {
+  name: weeklyschedule
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:8000/classes/weekly-schedule/
+  body: none
+  auth: bearer
+}
+
+headers {
+  : 
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ5MzM1NDQ0LCJpYXQiOjE3NDkzMzUxNDQsImp0aSI6ImUwZWU4ZDNmYzAxZTQyN2RiNDI1NjU3OTBiYWU2MDU2IiwidXNlcl9pZCI6MX0.87TyPQUdQQABTQNg8SsRC-8RSsLTxs77wt8K_9BkOos
+}
