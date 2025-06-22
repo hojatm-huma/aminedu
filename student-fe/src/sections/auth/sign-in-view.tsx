@@ -1,4 +1,7 @@
+import type { Credentials } from 'src/apis/auth';
+
 import { useState, useCallback } from 'react';
+import { useMutation } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -9,6 +12,8 @@ import InputAdornment from '@mui/material/InputAdornment';
 
 import { useRouter } from 'src/routes/hooks';
 
+import { login } from 'src/apis/auth';
+
 import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
@@ -18,9 +23,20 @@ export function SignInView() {
 
   const [showPassword, setShowPassword] = useState(false);
 
+  const { data, isPending, mutate } = useMutation({
+    mutationFn: (credentials: Credentials) => login(credentials),
+  });
+
   const handleSignIn = useCallback(() => {
-    router.push('/');
+    mutate({
+      username,
+      password,
+    });
+    // router.push('/');
   }, [router]);
+
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
 
   const renderForm = (
     <Box
@@ -35,6 +51,8 @@ export function SignInView() {
         name="username"
         label="نام کاربری"
         sx={{ mb: 3 }}
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
         slotProps={{
           inputLabel: { shrink: true },
         }}
@@ -44,6 +62,8 @@ export function SignInView() {
         fullWidth
         name="password"
         label="رمز عبور"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
         type={showPassword ? 'text' : 'password'}
         slotProps={{
           inputLabel: { shrink: true },
@@ -67,6 +87,7 @@ export function SignInView() {
         color="inherit"
         variant="contained"
         onClick={handleSignIn}
+        // loading={isPending}
       >
         ورود
       </Button>
