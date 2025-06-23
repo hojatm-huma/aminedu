@@ -1,10 +1,20 @@
+import { useQuery } from '@tanstack/react-query';
+
 import { Table, TableRow, TableBody, TableCell, TableHead, Typography } from '@mui/material';
 
+import { listWeeklySchedule } from 'src/apis/classes';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 // ----------------------------------------------------------------------
 
 export function ClassesView() {
+  const { data, isPending } = useQuery({
+    queryKey: ['list-weekly-schedule'],
+    queryFn: listWeeklySchedule,
+  });
+
+  console.log("query: ", data)
+
   return (
     <DashboardContent>
       <Typography variant="h4" sx={{ mb: 3 }}>

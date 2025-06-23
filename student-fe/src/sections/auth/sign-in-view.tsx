@@ -1,6 +1,7 @@
 import type { Credentials } from 'src/apis/auth';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
+import Cookies from 'universal-cookie';
 import { useMutation } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
@@ -16,6 +17,8 @@ import { login } from 'src/apis/auth';
 
 import { Iconify } from 'src/components/iconify';
 
+const cookies = new Cookies();
+
 // ----------------------------------------------------------------------
 
 export function SignInView() {
@@ -23,17 +26,23 @@ export function SignInView() {
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const { data, isPending, mutate } = useMutation({
+  const { isPending, mutate } = useMutation({
     mutationFn: (credentials: Credentials) => login(credentials),
+    onError: () => {},
+    onSuccess: (data) => {
+      cookies.set('access-token', data.access);
+      cookies.set('refresh-token', data.refresh);
+      router.push('/');
+    },
   });
 
-  const handleSignIn = useCallback(() => {
+  function handleSignIn() {
+    console.log('username: ', username);
     mutate({
       username,
       password,
     });
-    // router.push('/');
-  }, [router]);
+  }
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
