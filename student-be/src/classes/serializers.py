@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from classes.models import Class, WeeklySchedule, Lesson, Teacher
+from rest_framework.fields import SerializerMethodField
 
 
 class RetrieveWeeklyScheduleSerializer(serializers.ModelSerializer):
@@ -10,7 +11,27 @@ class RetrieveWeeklyScheduleSerializer(serializers.ModelSerializer):
     class ClassSerializer(serializers.ModelSerializer):
         class Meta:
             model = Class
-            fields = ("id", "lesson", "teacher", "starts_at", "ends_at")
+            fields = (
+                "id",
+                "lesson",
+                "teacher",
+                "starts_at",
+                "ends_at",
+                "day_of_week",
+            )
+
+        starts_at = SerializerMethodField()
+        ends_at = SerializerMethodField()
+
+        def get_starts_at(self, obj):
+            if obj.starts_at:
+                return obj.starts_at.strftime("%H:%M")
+            return None
+
+        def get_ends_at(self, obj):
+            if obj.starts_at:
+                return obj.starts_at.strftime("%H:%M")
+            return None
 
         class TeacherSerializer(serializers.ModelSerializer):
             class Meta:
