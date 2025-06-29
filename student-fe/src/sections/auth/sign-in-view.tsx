@@ -1,7 +1,6 @@
 import type { Credentials } from 'src/apis/auth';
 
 import { useState } from 'react';
-import Cookies from 'universal-cookie';
 import { useMutation } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
@@ -13,11 +12,9 @@ import InputAdornment from '@mui/material/InputAdornment';
 
 import { useRouter } from 'src/routes/hooks';
 
-import { login } from 'src/apis/auth';
+import { getToken } from 'src/apis/auth';
 
 import { Iconify } from 'src/components/iconify';
-
-const cookies = new Cookies();
 
 // ----------------------------------------------------------------------
 
@@ -27,11 +24,9 @@ export function SignInView() {
   const [showPassword, setShowPassword] = useState(false);
 
   const { isPending, mutate } = useMutation({
-    mutationFn: (credentials: Credentials) => login(credentials),
+    mutationFn: (credentials: Credentials) => getToken(credentials),
     onError: () => {},
     onSuccess: (data) => {
-      cookies.set('access-token', data.access);
-      cookies.set('refresh-token', data.refresh);
       router.push('/');
     },
   });

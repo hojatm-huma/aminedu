@@ -8,3 +8,8 @@
 - **Upload to S3**: `aws --endpoint-url https://s3.ir-thr-at1.arvanstorage.ir s3 sync build/ s3://tam-front-production --acl public-read`
 - **Configure AWS**: `aws configure`
 - Open browser: `http://localhost:3039`
+
+## TODO
+[ ] show weekly schedule and handle errors
+[ ] fix main page not found
+[ ] handle sign in error

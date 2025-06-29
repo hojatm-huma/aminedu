@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from classes.choices import DayOfWeek
 
 
 class WeeklySchedule(models.Model):
@@ -51,6 +52,12 @@ class Class(models.Model):
         on_delete=models.CASCADE,
         related_name="classes",
         verbose_name=_("Teacher"),
+    )
+
+    day_of_week = models.IntegerField(
+        default=DayOfWeek.SATURDAY,
+        choices=DayOfWeek.choices,
+        verbose_name=_("Day of Week"),
     )
 
     starts_at = models.TimeField(

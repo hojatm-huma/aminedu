@@ -48,6 +48,7 @@ export const routesSection: RouteObject[] = [
       </DashboardLayout>
     ),
     children: [
+      { path: '/', element: <ClassesPage /> },
       { path: 'user', element: <UserPage /> },
       { path: 'classes', element: <ClassesPage /> },
     ],

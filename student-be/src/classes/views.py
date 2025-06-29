@@ -9,4 +9,4 @@ class RetrieveWeeklyScheduleView(generics.ListAPIView):
     def get_queryset(self):
         return WeeklySchedule.objects.filter(
             students__user=self.request.user,
-        )
+        ).order_by("classes__day_of_week", "classes__starts_at")
