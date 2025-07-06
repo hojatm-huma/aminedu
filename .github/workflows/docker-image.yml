@@ -22,4 +22,4 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: push image
-        run: docker push hmodaresi/aminedu:latest
+        run: docker push hmodaresi/aminedu:${GITHUB_SHA::7}
