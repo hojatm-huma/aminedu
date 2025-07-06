@@ -13,7 +13,7 @@ jobs:
 
       - name: build image
         working-directory: student-be
-        run: docker build -f Dockerfile . -t hmodaresi/aminedu:latest
+        run: docker build -f Dockerfile . -t hmodaresi/aminedu:${GITHUB_SHA::7}
 
       - name: login to dockerhub
         uses: docker/login-action@v3
