@@ -1,0 +1,21 @@
+name: Build and Push studentbe
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: cd to studentbe
+      run: cd studentbe
+      
+    - name: build image
+      run: docker build -f Dockerfile . -t hmodaresi/aminedu:latest
+      
+    - name: push image
+      run: docker push hmodaresi/aminedu:latest
