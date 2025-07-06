@@ -11,10 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: cd to student-be
-        run: cd student-be
-
       - name: build image
+        working-directory: student-be
         run: docker build -f Dockerfile . -t hmodaresi/aminedu:latest
 
       - name: push image
