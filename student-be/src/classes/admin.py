@@ -28,12 +28,16 @@ class WeeklyScheduleAdmin(admin.ModelAdmin):
 
 @admin.register(Teacher)
 class TeacherAdmin(admin.ModelAdmin):
-    list_display = ("user",)
+    list_display = (
+        "id",
+        "user",
+    )
 
 
 @admin.register(Class)
 class ClassAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "lesson",
         "teacher",
         "starts_at",
@@ -43,4 +47,8 @@ class ClassAdmin(admin.ModelAdmin):
 
 @admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
-    list_display = ("name",)
+    list_display = (
+        "id",
+        "name",
+        "field_of_study",
+    )

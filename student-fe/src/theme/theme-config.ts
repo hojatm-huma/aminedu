@@ -31,7 +31,7 @@ export const themeConfig: ThemeConfig = {
    *************************************** */
   fontFamily: {
     primary: 'vazirmatn',
-    secondary: 'Barlow',
+    secondary: 'vazirmatn',
   },
   /** **************************************
    * Palette

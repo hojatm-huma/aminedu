@@ -72,6 +72,9 @@ class Class(models.Model):
         verbose_name=_("Ends At"),
     )
 
+    def __str__(self):
+        return f"{self.id} - {self.lesson}"
+
 
 class Lesson(models.Model):
     name = models.CharField(
@@ -88,6 +91,9 @@ class Lesson(models.Model):
         verbose_name=_("Field of Study"),
     )
 
+    def __str__(self):
+        return f"{self.id} - {self.name}"
+
 
 class Teacher(models.Model):
     user = models.OneToOneField(
@@ -96,6 +102,9 @@ class Teacher(models.Model):
         related_name="teacher_profile",
         verbose_name=_("User"),
     )
+
+    def __str__(self):
+        return f"{self.id} - {self.user.last_name}"
 
     @property
     def full_name(self):

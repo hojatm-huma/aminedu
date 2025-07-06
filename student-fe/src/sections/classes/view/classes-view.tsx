@@ -13,8 +13,6 @@ export function ClassesView() {
     queryFn: listWeeklySchedule,
   });
 
-  console.log(data);
-
   return (
     <DashboardContent>
       <Typography variant="h4" sx={{ mb: 3 }}>
