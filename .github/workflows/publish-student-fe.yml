@@ -1,0 +1,41 @@
+name: build and deploy studentfe
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        working-directory: student-fe
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install
+
+      - name: Build the application
+        working-directory: student-fe
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: build
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy to S3
+        working-directory: student-fe
+        run: |
+            aws --endpoint-url https://s3.ir-thr-at1.arvanstorage.ir s3 sync build/ s3://tam-front-production --acl public-read
