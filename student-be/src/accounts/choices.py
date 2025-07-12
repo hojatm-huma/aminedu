@@ -17,4 +17,4 @@ class Stage(models.TextChoices):
 
 class Gender(models.TextChoices):
     MALE = "MALE", _("Male")
-    FEMALE = "FEMALE", _("FEMALE")
+    FEMALE = "FEMALE", _("Female")
