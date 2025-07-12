@@ -39,4 +39,4 @@ jobs:
       - name: Deploy to S3
         working-directory: student-fe
         run: |
-          aws --endpoint-url https://s3.ir-thr-at1.arvanstorage.ir s3 sync build/ s3://tam-front-production --acl public-read
+          aws --endpoint-url https://s3.ir-thr-at1.arvanstorage.ir s3 sync dist/ s3://tam-front-production --acl public-read
