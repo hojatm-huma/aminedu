@@ -30,8 +30,8 @@ SECRET_KEY = os.getenv("SECRET_KEY", "secret-key")
 DEBUG = os.getenv("DEBUG", False)
 
 ALLOWED_HOSTS = [os.getenv("ALLOWED_HOST", "localhost")]
-CORS_ALLOWED_ORIGINS = [os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3039")]
-CSRF_TRUSTED_ORIGINS = [os.getenv("CSRF_TRUSTED_ORIGINS", "http://localhost:3039")]
+CORS_ALLOWED_ORIGINS = [os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000")]
+CSRF_TRUSTED_ORIGINS = [os.getenv("CSRF_TRUSTED_ORIGINS", "http://localhost:3000")]
 
 # Application definition
 
@@ -85,7 +85,8 @@ WSGI_APPLICATION = "stubentbe.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "/data/db.sqlite3",
+        "NAME": "db.sqlite3",
+        # "NAME": "/data/db.sqlite3",
     }
 }
 

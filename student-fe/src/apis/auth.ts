@@ -1,11 +1,8 @@
-import axios from "axios";
-import Cookies from 'universal-cookie';
+import { getAccessToken, getRefreshToken } from "@/utils/tokens"
 
-import { setTokens } from "src/utils/cookie";
 
 import { myAxios } from './base';
 
-const cookies = new Cookies()
 
 export interface Credentials {
     username: string;
@@ -17,9 +14,6 @@ export async function getToken(cred: Credentials) {
         username: cred.username,
         password: cred.password
     });
-    const { access, refresh } = data
-    setTokens(access, refresh)
-
     return data;
 }
 
@@ -29,17 +23,17 @@ export interface RefreshTokenOutput {
 }
 
 export async function refreshToken(): Promise<RefreshTokenOutput> {
-    const accessToken_ = cookies.get("access-token")
-    const refreshToken_ = cookies.get("refresh-token")
+    const accessToken_ = getAccessToken()
+    const refreshToken_ = getRefreshToken()
 
 
-    const { data } = await axios.post(
-        `${import.meta.env.VITE_BASE_API_URL}/accounts/token/refresh/`,
+    const { data } = await myAxios.post(
+        '/accounts/token/refresh/',
         {
             refresh: refreshToken_
         },
         {
-            // headers: { "Authorization": `Bearer ${accessToken_}` }
+            headers: { "Authorization": `Bearer ${accessToken_}` }
         }
     );
 
