@@ -14,16 +14,22 @@ import {
 } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function SignIn({}) {
+  const router = useRouter();
+
   const mutation = useMutation({
     mutationFn: getToken,
     onSuccess: (data) => {
       const { access, refresh } = data;
-      setTokens(access, refresh);
-      myAxios.defaults.headers.common["Authorization"] = `Bearer ${access}`;
-      window.location.href = "/dashboard/";
+
+      if (typeof window != undefined) {
+        setTokens(access, refresh);
+        myAxios.defaults.headers.common["Authorization"] = `Bearer ${access}`;
+        router.push("/dashboard");
+      }
     },
   });
 
@@ -91,4 +97,3 @@ export default function SignIn({}) {
     </Stack>
   );
 }
-

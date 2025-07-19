@@ -12,8 +12,11 @@ import { prefixer } from "stylis";
 import rtlPlugin from "@mui/stylis-plugin-rtl";
 import { CssBaseline } from "@mui/material";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import AuthProtector from "./components/auth_protector";
 import dynamic from "next/dynamic";
+
+const AuthProtector = dynamic(() => import("./components/AuthProtector"), {
+  ssr: false,
+});
 
 const rtlCache = createCache({
   key: "muirtl",
@@ -52,4 +55,4 @@ function RootLayout({
   );
 }
 
-export default dynamic(() => Promise.resolve(RootLayout), { ssr: false });
+export default RootLayout;

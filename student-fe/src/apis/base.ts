@@ -5,8 +5,12 @@ import { refreshToken } from "./auth";
 
 export const myAxios = axios.create({
     baseURL: process.env.NEXT_PUBLIC_BASE_API_URL,
-    headers: { "Authorization": `Bearer ${getAccessToken()}` },
 });
+
+myAxios.interceptors.request.use(config => {
+    config.headers.Authorization = `Bearer ${getAccessToken()}`
+    return config
+}, error => Promise.reject(error))
 
 myAxios.interceptors.response.use(
     response => response,
