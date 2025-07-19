@@ -14,7 +14,7 @@ import { CssBaseline } from "@mui/material";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 
-const AuthProtector = dynamic(() => import("./components/AuthProtector"), {
+const AuthProtector = dynamic(() => import("./AuthProtector"), {
   ssr: false,
 });
 
