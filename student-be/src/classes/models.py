@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from classes.choices import DayOfWeek
+from classes.choices import DayOfWeek, FieldOfStudy, Gender, SchoolYear
 
 
 class WeeklySchedule(models.Model):
@@ -25,6 +25,48 @@ class Student(models.Model):
         on_delete=models.CASCADE,
         related_name="student_profile",
         verbose_name=_("User"),
+    )
+
+    national_code = models.CharField(
+        verbose_name=_("National Code"),
+    )
+
+    field_of_study = models.CharField(
+        choices=FieldOfStudy.choices,
+        verbose_name=_("Field of Study"),
+    )
+
+    school_year = models.CharField(
+        choices=SchoolYear.choices,
+        verbose_name=_("School Year"),
+    )
+
+    gender = models.CharField(
+        choices=Gender.choices,
+        verbose_name=_("Gender"),
+    )
+
+    phone_number = models.CharField(
+        max_length=15,
+        verbose_name=_("Phone Number"),
+    )
+
+    supervisor_phone_number = models.CharField(
+        max_length=15,
+        verbose_name=_("Supervisor Phone Number"),
+    )
+
+    province = models.CharField(
+        verbose_name=_("Province"),
+    )
+
+    city = models.CharField(
+        verbose_name=_("City"),
+    )
+
+    village = models.CharField(
+        blank=True,
+        verbose_name=_("Village"),
     )
 
     weekly_schedule = models.ForeignKey(
