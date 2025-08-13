@@ -52,6 +52,13 @@ class User(AbstractUser):
         verbose_name=_("Supervisor Phone Number"),
     )
 
+    province = models.CharField(
+        max_length=50,
+        blank=True,
+        null=False,
+        verbose_name=_("Province"),
+    )
+
     city = models.CharField(
         max_length=50,
         blank=True,
