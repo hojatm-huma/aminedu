@@ -157,6 +157,7 @@ class Command(BaseCommand):
             },
         )
         user_instance.set_password(user.phone_number)
+        user_instance.save()
         Student.objects.update_or_create(
             user=user_instance,
             defaults={
