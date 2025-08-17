@@ -4,3 +4,8 @@ export async function listWeeklySchedule() {
     const { data } = await myAxios.get("/classes/weekly-schedule/")
     return data
 }
+
+export async function retrieveProfile() {
+    const { data } = await myAxios.get("/classes/student/profile/")
+    return data
+}

@@ -15,6 +15,7 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import HomeIcon from "@mui/icons-material/Home";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import Link from "next/link";
 
 const drawerWidth = 240;
@@ -29,6 +30,11 @@ const drawerItems = [
     name: "برنامه هفتگی",
     icon: <CalendarTodayIcon />,
     path: "/dashboard/weekly-plan",
+  },
+  {
+    name: "پروفایل",
+    icon: <AccountCircleOutlinedIcon />,
+    path: "/dashboard/profile",
   },
 ];
 

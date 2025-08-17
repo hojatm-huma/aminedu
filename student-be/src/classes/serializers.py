@@ -68,6 +68,11 @@ class RetrieveProfileSerializer(serializers.ModelSerializer):
             "address",
             "postcode",
         ]
+        extra_kwargs = {
+            "gender": {"source": "get_gender_display"},
+            "stage": {"source": "get_stage_display"},
+            "field_of_study": {"source": "get_field_of_study_display"},
+        }
 
     def get_first_name(self, obj: Student):
         return obj.first_name
