@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from classes.models import Class, WeeklySchedule, Lesson, Teacher
+from classes.models import Class, Student, WeeklySchedule, Lesson, Teacher
 from rest_framework.fields import SerializerMethodField
 
 
@@ -47,3 +47,30 @@ class RetrieveWeeklyScheduleSerializer(serializers.ModelSerializer):
         teacher = TeacherSerializer(read_only=True)
 
     classes = ClassSerializer(many=True, read_only=True)
+
+
+class RetrieveProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = [
+            "id",
+            "first_name",
+            "last_name",
+            "national_code",
+            "field_of_study",
+            "stage",
+            "gender",
+            "phone_number",
+            "supervisor_phone_number",
+            "province",
+            "city",
+            "village",
+            "address",
+            "postcode",
+        ]
+
+    def get_first_name(self, obj: Student):
+        return obj.first_name
+
+    def get_last_name(self, obj: Student):
+        return obj.last_name

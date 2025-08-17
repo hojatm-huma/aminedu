@@ -94,6 +94,14 @@ class Student(models.Model):
         verbose_name=_("Weekly Schedule"),
     )
 
+    @property
+    def first_name(self):
+        return self.user.first_name
+
+    @property
+    def last_name(self):
+        return self.user.last_name
+
     class Meta:
         verbose_name = _("Student")
         verbose_name_plural = _("Students")

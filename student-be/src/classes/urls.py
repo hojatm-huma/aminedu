@@ -1,5 +1,5 @@
 from django.urls import path
-from classes.views import RetrieveWeeklyScheduleView
+from classes.views import RetrieveProfileView, RetrieveWeeklyScheduleView
 
 
 urlpatterns = [
@@ -7,5 +7,10 @@ urlpatterns = [
         "weekly-schedule/",
         RetrieveWeeklyScheduleView.as_view(),
         name="weekly_schedule",
+    ),
+    path(
+        "student/profile/",
+        RetrieveProfileView.as_view(),
+        name="profile",
     ),
 ]
