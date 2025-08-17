@@ -10,6 +10,4 @@ class UserAdmin(admin.ModelAdmin):
         "email",
         "first_name",
         "last_name",
-        "national_code",
-        "field_of_study",
     )

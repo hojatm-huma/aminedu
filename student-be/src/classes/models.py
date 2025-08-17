@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from classes.choices import DayOfWeek
+from classes.choices import DayOfWeek, FieldOfStudy, Gender, Stage
 
 
 class WeeklySchedule(models.Model):
@@ -27,8 +27,68 @@ class Student(models.Model):
         verbose_name=_("User"),
     )
 
+    national_code = models.CharField(
+        max_length=10,
+        unique=True,
+        verbose_name=_("National Code"),
+    )
+
+    field_of_study = models.CharField(
+        max_length=20,
+        choices=FieldOfStudy.choices,
+        verbose_name=_("Field of Study"),
+    )
+
+    stage = models.CharField(
+        max_length=20,
+        choices=Stage.choices,
+        verbose_name=_("Stage"),
+    )
+
+    gender = models.CharField(
+        max_length=10,
+        choices=Gender.choices,
+        verbose_name=_("Gender"),
+    )
+
+    phone_number = models.CharField(
+        max_length=15,
+        verbose_name=_("Phone Number"),
+    )
+
+    supervisor_phone_number = models.CharField(
+        max_length=15,
+        verbose_name=_("Supervisor Phone Number"),
+    )
+
+    province = models.CharField(
+        max_length=50,
+        verbose_name=_("Province"),
+    )
+
+    city = models.CharField(
+        max_length=50,
+        verbose_name=_("City"),
+    )
+
+    village = models.CharField(
+        max_length=50,
+        verbose_name=_("Village"),
+    )
+
+    address = models.CharField(
+        max_length=255,
+        verbose_name=_("Address"),
+    )
+
+    postcode = models.CharField(
+        max_length=10,
+        verbose_name=_("Postcode"),
+    )
+
     weekly_schedule = models.ForeignKey(
         "WeeklySchedule",
+        null=True,
         on_delete=models.CASCADE,
         related_name="students",
         verbose_name=_("Weekly Schedule"),
