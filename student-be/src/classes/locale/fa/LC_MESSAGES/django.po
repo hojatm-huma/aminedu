@@ -19,7 +19,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 #: classes/choices.py:16
 msgid "Mathematics"
-msgstr ""
+msgstr "ریاضی و فیزیک"
 
 #: classes/choices.py:17
 msgid "Science"
