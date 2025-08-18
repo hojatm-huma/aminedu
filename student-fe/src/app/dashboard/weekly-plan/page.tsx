@@ -45,6 +45,7 @@ export default function WeeklyPlan() {
           )}
 
           {data &&
+            data.length > 0 &&
             data[0].classes.map(
               (
                 classItem: any //eslint-disable-line
