@@ -35,4 +35,4 @@ jobs:
         run: sudo apt-get install -y s3cmd
       - name: Upload to S3
         run: |
-          s3cmd put --recursive --acl-public --no-mime-magic --guess-mime-type student-fe/out/* s3://student-fe
+          s3cmd sync --recursive --acl-public --no-mime-magic --guess-mime-type --delete-removed student-fe/out/ s3://student-fe
