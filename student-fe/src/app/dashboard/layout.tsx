@@ -113,6 +113,7 @@ export default function RootLayout({
           open={mobileOpen}
           onTransitionEnd={handleDrawerTransitionEnd}
           onClose={handleDrawerClose}
+          anchor="right"
           sx={{
             display: { xs: "block", sm: "none" },
             "& .MuiDrawer-paper": {
@@ -123,6 +124,9 @@ export default function RootLayout({
           slotProps={{
             root: {
               keepMounted: true, // Better open performance on mobile.
+            },
+            paper: {
+              style: { right: 0 },
             },
           }}
         >
