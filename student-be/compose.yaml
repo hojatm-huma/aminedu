@@ -4,7 +4,7 @@ services:
     environment:
       - DEBUG=True
       - SECRET=hello
-      - ALLOWED_HOSTS=localhost:8000,localhost:3000
+      - ALLOWED_HOSTS=localhost
       - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8000
     ports:
       - "8000:8000"
