@@ -19,7 +19,7 @@ export default function LoginPage() {
 
   const REDIRECT_TO = "/Dashboard";
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     const u = username.trim();
     const p = password.trim();
 
@@ -37,18 +37,33 @@ export default function LoginPage() {
       }
       return;
     }
-    if (u !== VALID_USERNAME) {
-      setError("نام کاربری اشتباه است.");
-      return;
-    } else if (p !== VALID_PASSWORD) {
-      setError("رمزعبور اشتباه است");
-      return;
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/token/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: u,
+          password: p,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setError(null);
+        localStorage.setItem("username", u);
+        localStorage.setItem("access_token", data.access);
+        localStorage.setItem("refresh_token", data.refresh);
+        router.push(REDIRECT_TO);
+      } else {
+        const data = await response.json();
+        setError(data.detail || "نام کاربری یا رمز عبور اشتباه است.");
+      }
+    } catch (err) {
+      setError("خطا در برقراری ارتباط با سرور.");
     }
-
-
-    setError(null);
-    localStorage.setItem("username", u);
-    router.push(REDIRECT_TO);
   };
 
   return (
