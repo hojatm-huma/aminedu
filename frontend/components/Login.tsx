@@ -39,12 +39,9 @@ export default function LoginPage() {
     if (u === "123456789" && p === "123456789") {
       role = "student";
       displayName = "علی رضایی";
-    } else if (u === "teacher" && p === "123456789") {
+    } else if (u === "987654321" && p === "987654321") {
       role = "teacher";
       displayName = "استاد احمدی";
-    } else if (u === "moallem" && p === "123456789") {
-      role = "teacher";
-      displayName = "استاد علوی";
     } else {
       setError("نام کاربری یا رمزعبور اشتباه است.");
       return;
