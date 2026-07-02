@@ -35,17 +35,23 @@ export default function LoginPage() {
     }
 
     let role = "";
+    let displayName = "";
     if (u === "123456789" && p === "123456789") {
       role = "student";
+      displayName = "علی رضایی";
     } else if (u === "teacher" && p === "123456789") {
       role = "teacher";
+      displayName = "استاد احمدی";
+    } else if (u === "moallem" && p === "123456789") {
+      role = "teacher";
+      displayName = "استاد علوی";
     } else {
       setError("نام کاربری یا رمزعبور اشتباه است.");
       return;
     }
 
     setError(null);
-    localStorage.setItem("username", u === "teacher" ? "استاد احمدی" : "علی رضایی");
+    localStorage.setItem("username", displayName);
     localStorage.setItem("role", role);
     router.push(REDIRECT_TO);
   };
