@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from "react";
 // ── Persian calendar helpers ──────────────────────────────────────────────────
 function faToEn(fa: string): number {
   const map: Record<string, string> = {
-    "۰":"0","۱":"1","二":"2","۳":"3","۴":"4","۵":"5","۶":"6","۷":"7","۸":"8","۹":"9",
+    "۰":"0","۱":"1","۲":"2","۳":"3","۴":"4","۵":"5","۶":"6","۷":"7","۸":"8","۹":"9",
   };
   // Handle some simple digit conversions
   return Number(fa.replace(/[۰-۹]/g, (d) => map[d] ?? d).replace(/٬/g, "")) || 0;
