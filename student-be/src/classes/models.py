@@ -177,3 +177,80 @@ class Teacher(models.Model):
     @property
     def full_name(self):
         return f"{self.user.first_name} {self.user.last_name}"
+
+
+class Exercise(models.Model):
+    lesson = models.ForeignKey(
+        "Lesson",
+        on_delete=models.CASCADE,
+        related_name="exercises",
+        verbose_name=_("Lesson"),
+    )
+
+    created_by = models.ForeignKey(
+        "Teacher",
+        on_delete=models.CASCADE,
+        related_name="exercises",
+        verbose_name=_("Created By"),
+    )
+
+    title = models.CharField(
+        max_length=200,
+        verbose_name=_("Title"),
+    )
+
+    description = models.TextField(
+        blank=True,
+        verbose_name=_("Description"),
+    )
+
+    due_date = models.DateField(
+        verbose_name=_("Due Date"),
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_("Created At"),
+    )
+
+    def __str__(self):
+        return f"{self.lesson.name} — {self.title}"
+
+    class Meta:
+        verbose_name = _("Exercise")
+        verbose_name_plural = _("Exercises")
+        ordering = ["due_date"]
+
+
+class ExerciseSubmission(models.Model):
+    exercise = models.ForeignKey(
+        "Exercise",
+        on_delete=models.CASCADE,
+        related_name="submissions",
+        verbose_name=_("Exercise"),
+    )
+
+    student = models.ForeignKey(
+        "Student",
+        on_delete=models.CASCADE,
+        related_name="submissions",
+        verbose_name=_("Student"),
+    )
+
+    file = models.FileField(
+        upload_to="submissions/%Y/%m/",
+        verbose_name=_("File"),
+    )
+
+    submitted_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_("Submitted At"),
+    )
+
+    class Meta:
+        unique_together = ("exercise", "student")
+        verbose_name = _("Exercise Submission")
+        verbose_name_plural = _("Exercise Submissions")
+
+    def __str__(self):
+        return f"{self.student.user.username} → {self.exercise.title}"

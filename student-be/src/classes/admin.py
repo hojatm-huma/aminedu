@@ -1,5 +1,5 @@
 from django.contrib import admin
-from classes.models import Class, Lesson, Student, Teacher, WeeklySchedule
+from classes.models import Class, Lesson, Student, Teacher, WeeklySchedule, Exercise, ExerciseSubmission
 
 
 # Register your models here.
@@ -52,3 +52,18 @@ class LessonAdmin(admin.ModelAdmin):
         "name",
         "field_of_study",
     )
+
+
+@admin.register(Exercise)
+class ExerciseAdmin(admin.ModelAdmin):
+    list_display = ("id", "title", "lesson", "created_by", "due_date", "created_at")
+    list_filter = ("lesson", "due_date")
+    search_fields = ("title", "lesson__name", "created_by__user__last_name")
+    date_hierarchy = "due_date"
+
+
+@admin.register(ExerciseSubmission)
+class ExerciseSubmissionAdmin(admin.ModelAdmin):
+    list_display = ("id", "exercise", "student", "submitted_at")
+    list_filter = ("exercise__lesson",)
+    search_fields = ("student__user__username", "exercise__title")

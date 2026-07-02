@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from classes.models import Class, Student, WeeklySchedule, Lesson, Teacher
+from classes.models import Class, Student, WeeklySchedule, Lesson, Teacher, Exercise, ExerciseSubmission
 from rest_framework.fields import SerializerMethodField
 
 
@@ -79,3 +79,41 @@ class RetrieveProfileSerializer(serializers.ModelSerializer):
 
     def get_last_name(self, obj: Student):
         return obj.last_name
+
+
+class ExerciseSubmissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExerciseSubmission
+        fields = ["id", "file", "submitted_at"]
+        read_only_fields = ["submitted_at"]
+
+
+class ExerciseSerializer(serializers.ModelSerializer):
+    lesson_name = serializers.CharField(source="lesson.name", read_only=True)
+    teacher_name = serializers.CharField(source="created_by.full_name", read_only=True)
+    submission = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Exercise
+        fields = [
+            "id",
+            "title",
+            "description",
+            "due_date",
+            "created_at",
+            "lesson",
+            "lesson_name",
+            "teacher_name",
+            "submission",
+        ]
+
+    def get_submission(self, obj: Exercise):
+        request = self.context.get("request")
+        if not request:
+            return None
+        try:
+            student = request.user.student_profile
+            sub = obj.submissions.get(student=student)
+            return ExerciseSubmissionSerializer(sub, context=self.context).data
+        except (ExerciseSubmission.DoesNotExist, Exception):
+            return None

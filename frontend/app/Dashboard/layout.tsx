@@ -1,474 +1,304 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const pathname = usePathname();
-  const [displayName, setDisplayName] = useState("کاربر");
-  const [openNotificationModal, setOpenNotificationModal] = useState(false);
-  const [openMessageModal, setOpenMessageModal] = useState(false);
-  
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const router = useRouter();
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  useEffect(() => {
-    setUserMenuOpen(false);
-  }, [pathname]);
-  
-  useEffect(() => {
-    const close = () => setUserMenuOpen(false);
-    window.addEventListener("click", close);
-    return () => window.removeEventListener("click", close);
-  }, []);
-  
 
-  const handleLogout = () => {
-    localStorage.removeItem("username");
-    router.push("/");
-  };
-  
-  
+type SubTab = { label: string; route: string };
+type NavItem = { label: string; key: string; route: string; subtabs: SubTab[] };
+
+const NAV_ITEMS: NavItem[] = [
+  {
+    label: "فانوس",
+    key: "Fanoos",
+    route: "/Dashboard/Fanoos",
+    subtabs: [
+      { label: "برنامه هفتگی کلاسی", route: "/Dashboard/Fanoos/Kelas" },
+      { label: "تمرین کلاسی", route: "/Dashboard/Fanoos/Tamrin" },
+      { label: "آزمون", route: "/Dashboard/Fanoos/Azmoon" },
+      { label: "مشاوره", route: "/Dashboard/Fanoos/Counseling" },
+      { label: "سوال و رفع اشکال", route: "/Dashboard/Fanoos/QA" },
+      { label: "جزوات", route: "/Dashboard/Fanoos/Jozovat" },
+    ],
+  },
+  { label: "سنجه",     key: "Sanjeh",     route: "/Dashboard/Sanjeh",     subtabs: [] },
+  { label: "سفینه",    key: "Safineh",    route: "/Dashboard/Safineh",    subtabs: [] },
+  { label: "برنا",     key: "Barna",      route: "/Dashboard/Barna",      subtabs: [] },
+  { label: "یاس",      key: "Yas",        route: "/Dashboard/Yas",        subtabs: [] },
+  { label: "مهرانه",   key: "Mehraneh",   route: "/Dashboard/Mehraneh",   subtabs: [] },
+  { label: "کادا",     key: "Kada",       route: "/Dashboard/Kada",       subtabs: [] },
+  { label: "پشتیبانی", key: "Poshtibani", route: "/Dashboard/Poshtibani", subtabs: [] },
+];
+
+function ChevronDown() {
+  return (
+    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 9l-7 7-7-7" />
+    </svg>
+  );
+}
+
+function NavLinks({
+  hoveredKey,
+  setHoveredKey,
+  pathname,
+  onNavigate,
+}: {
+  hoveredKey: string | null;
+  setHoveredKey: (k: string | null) => void;
+  pathname: string;
+  onNavigate?: () => void;
+}) {
+  return (
+    <nav dir="rtl" className="px-3 py-6 space-y-1">
+      {NAV_ITEMS.map((item) => {
+        const isHovered = hoveredKey === item.key;
+        const hasSubtabs = item.subtabs.length > 0;
+        const isActive = pathname.startsWith(`/Dashboard/${item.key}`);
+        const activeCls = "bg-gradient-to-l from-[#6FA0D6] to-[#3E66A8] text-white shadow-sm";
+        const idleCls   = "text-[#7A9BB5] hover:bg-[#E8F0FA] hover:text-[#3E66A8]";
+
+        return (
+          <div
+            key={item.key}
+            onMouseEnter={() => hasSubtabs && setHoveredKey(item.key)}
+            onMouseLeave={() => setHoveredKey(null)}
+          >
+            {/* Parent tab */}
+            {hasSubtabs ? (
+              <div className={`flex items-center justify-between px-4 py-3 rounded-[14px] transition cursor-default select-none ${isActive || isHovered ? activeCls : idleCls}`}>
+                <span className="text-[16px] font-semibold">{item.label}</span>
+                <span className={`transition-transform duration-200 ${isHovered ? "rotate-180" : ""}`}>
+                  <ChevronDown />
+                </span>
+              </div>
+            ) : (
+              <Link
+                href={item.route}
+                onClick={onNavigate}
+                className={`flex items-center px-4 py-3 rounded-[14px] transition ${isActive ? activeCls : idleCls}`}
+              >
+                <span className="text-[16px] font-semibold">{item.label}</span>
+              </Link>
+            )}
+
+            {/* Subtabs — animated expand */}
+            {hasSubtabs && (
+              <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isHovered ? "max-h-80 opacity-100 mt-1" : "max-h-0 opacity-0"}`}>
+                <div className="mr-3 pr-3 border-r-2 border-[#6FA0D6]/40 space-y-1 pb-1">
+                  {item.subtabs.map((sub) => {
+                    const isSubActive = pathname === sub.route;
+                    return (
+                      <Link
+                        key={sub.route}
+                        href={sub.route}
+                        onClick={onNavigate}
+                        className={`block px-3 py-2 rounded-[10px] text-[14px] transition ${
+                          isSubActive
+                            ? "bg-[#DDE9F8] text-[#3E66A8] font-bold"
+                            : "text-[#7A9BB5] hover:bg-[#EEF5FF] hover:text-[#3E66A8]"
+                        }`}
+                      >
+                        {sub.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </nav>
+  );
+}
+
+function ProfileAvatar({ name, onClick }: { name: string; onClick: (e: React.MouseEvent) => void }) {
+  const initials = name.slice(0, 2);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-2 rounded-[10px] px-2 py-1 hover:bg-[#F0F5FF] transition"
+    >
+      <span className="text-[13px] font-bold text-[#4A5568] hidden sm:block">{name}</span>
+      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#6FA0D6] to-[#3E66A8] flex items-center justify-center text-white text-[13px] font-bold shrink-0">
+        {initials}
+      </div>
+    </button>
+  );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const [displayName, setDisplayName]             = useState("کاربر");
+  const [sidebarOpen, setSidebarOpen]             = useState(false);
+  const [userMenuOpen, setUserMenuOpen]           = useState(false);
+  const [hoveredKey, setHoveredKey]               = useState<string | null>(null);
+  const [openNotifModal, setOpenNotifModal]       = useState(false);
+  const [openMsgModal, setOpenMsgModal]           = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("username");
     if (saved) setDisplayName(saved);
   }, []);
 
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [pathname]);
+  useEffect(() => { setSidebarOpen(false); }, [pathname]);
+  useEffect(() => { setUserMenuOpen(false); }, [pathname]);
 
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSidebarOpen(false);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    const close = () => setUserMenuOpen(false);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
   }, []);
 
-  const activeCalendar =
-    pathname === "/Dashboard/Calendar" || pathname === "/dashboard";
-  const activeHome = pathname === "/Dashboard";
-  const activeProfile = pathname.startsWith("/Dashboard/Profile");
-  const activeSettings = pathname.startsWith("/Dashboard/Settings");
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setSidebarOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
-  const NavLinks = () => (
-    <nav className="p-4 py-10 space-y-6">
-      <Link
-        href="/Dashboard"
-        className={[
-          "group w-full flex items-center gap-6 px-4 py-3 rounded-[20px] transition",
-          activeHome
-            ? "bg-gradient-to-r from-[#6FA0D6] to-[#3E66A8] text-white shadow-sm"
-            : "text-[#9DB3C9] hover:bg-gradient-to-r hover:from-[#6FA0D6] hover:to-[#3E66A8] hover:text-white",
-        ].join(" ")}
-      >
-        <div className="w-[40px] h-[35px] flex items-center justify-center shrink-0">
-          <img
-            src="/Vector (8).svg"
-            alt=""
-            className={[activeHome ? "hidden" : "block", "group-hover:hidden"].join(
-              " "
-            )}
-          />
-          <img
-            src="/home.svg"
-            alt=""
-            className={[activeHome ? "block" : "hidden", "group-hover:block"].join(
-              " "
-            )}
-          />
-        </div>
-        <span className="text-[18px] sm:text-[18px] font-semibold">صفحه اصلی</span>
-      </Link>
-
-      <Link
-        href="/Dashboard/Calendar"
-        className={[
-          "group w-full flex items-center gap-6 px-4 py-3 rounded-[20px] transition",
-          activeCalendar
-            ? "bg-gradient-to-r from-[#6FA0D6] to-[#3E66A8] text-white shadow-sm"
-            : "text-[#9DB3C9] hover:bg-gradient-to-r hover:from-[#6FA0D6] hover:to-[#3E66A8] hover:text-white",
-        ].join(" ")}
-      >
-        <div className="w-[40px] h-[35px] flex items-center justify-center shrink-0">
-          <img
-            src="/clandar.svg"
-            alt=""
-            className={[
-              activeCalendar ? "hidden" : "block",
-              "group-hover:hidden",
-            ].join(" ")}
-          />
-          <img
-            src="/Vector (9).svg"
-            alt=""
-            className={[
-              activeCalendar ? "block" : "hidden",
-              "group-hover:block",
-            ].join(" ")}
-          />
-        </div>
-        <span className="text-[18px] sm:text-[18px] font-semibold">تقویم</span>
-      </Link>
-
-      <Link
-        href="/Dashboard/Profile"
-        className={[
-          "group w-full flex items-center gap-6 px-4 py-3 rounded-[20px] transition",
-          activeProfile
-            ? "bg-gradient-to-r from-[#6FA0D6] to-[#3E66A8] text-white shadow-sm"
-            : "text-[#9DB3C9] hover:bg-gradient-to-r hover:from-[#6FA0D6] hover:to-[#3E66A8] hover:text-white",
-        ].join(" ")}
-      >
-        <div className="w-[40px] h-[35px] flex items-center justify-center shrink-0">
-          <img
-            src="/Group 237486.svg"
-            alt=""
-            className={[
-              activeProfile ? "hidden" : "block",
-              "group-hover:hidden",
-            ].join(" ")}
-          />
-          <img
-            src="/prof.svg"
-            alt=""
-            className={[
-              activeProfile ? "block" : "hidden",
-              "group-hover:block",
-            ].join(" ")}
-          />
-        </div>
-        <span className="text-[18px] sm:text-[18px] font-semibold">پروفایل</span>
-      </Link>
-
-      <Link
-        href="/Dashboard/Settings"
-        className={[
-          "group w-full flex items-center gap-6 px-4 py-3 rounded-[20px] transition",
-          activeSettings
-            ? "bg-gradient-to-r from-[#6FA0D6] to-[#3E66A8] text-white shadow-sm"
-            : "text-[#9DB3C9] hover:bg-gradient-to-r hover:from-[#6FA0D6] hover:to-[#3E66A8] hover:text-white",
-        ].join(" ")}
-      >
-        <div className="w-[40px] h-[35px] flex items-center justify-center shrink-0">
-          <img
-            src="/Vector (10).svg"
-            alt=""
-            className={[
-              activeSettings ? "hidden" : "block",
-              "group-hover:hidden",
-            ].join(" ")}
-          />
-          <img
-            src="/setting.svg"
-            alt=""
-            className={[
-              activeSettings ? "block" : "hidden",
-              "group-hover:block",
-            ].join(" ")}
-          />
-        </div>
-        <span className="text-[18px] sm:text-[18px] font-semibold">تنظیمات</span>
-      </Link>
-    </nav>
-  );
+  const handleLogout = () => {
+    localStorage.removeItem("username");
+    router.push("/");
+  };
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-[#F4F7FB]">
       <div className="flex min-h-screen">
-        <div className="flex-1 min-w-0">
-          <header className="h-[64px] bg-white flex  items-center pt-15 pb-10 max-sm:pt-10 max-sm:pb-2 px-4 sm:px-6 lg:px-12">
-          <div
-  className="relative group flex items-center gap-2 text-[13px] text-[#4A5568] min-w-[140px]"
-  onClick={(e) => e.stopPropagation()}
->
-  <div className="bg-[#F9FCFF] px-2 pt-2 rounded-[8px]">
-    <img src="/Group 237549.svg" alt="" />
-  </div>
 
-  <button
-    type="button"
-    onClick={() => setUserMenuOpen((v) => !v)}
-    className="flex items-center gap-2"
-  >
-    <span className="font-bold truncate max-w-[120px]">
-      {displayName}
-    </span>
-    <img
-  src="/Arrow 45 (Stroke).svg"
-  alt=""
-  className={[
-    "transition-transform duration-200",
+        {/* ── Main content area ── */}
+        <div className="flex-1 min-w-0 flex flex-col">
 
-    "rotate-270",
+          {/* Header */}
+          <header dir="rtl" className="h-[64px] bg-white border-b border-[#EEF0F4] flex items-center px-4 sm:px-6 gap-3 shrink-0">
 
-  
-    "lg:group-hover:rotate-360",
+            {/* Profile avatar (top-right in RTL = start) */}
+            <div
+              className="relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ProfileAvatar name={displayName} onClick={() => setUserMenuOpen((v) => !v)} />
+              {/* Dropdown */}
+              <div className={`absolute top-full right-0 z-50 pt-2 transition-all duration-200 ${userMenuOpen ? "opacity-100 pointer-events-auto translate-y-0" : "opacity-0 pointer-events-none -translate-y-1"}`}>
+                <div dir="rtl" className="rounded-[14px] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-[#EEF0F4] p-1 w-[160px]">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-[10px] text-[12px] font-bold text-[#C53030] hover:bg-red-50 transition cursor-pointer"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    <span>خروج از حساب</span>
+                  </button>
+                </div>
+              </div>
+            </div>
 
-    userMenuOpen ? "rotate-360 lg:rotate-270" : "",
-  ].join(" ")}
-/>
+            {/* Search bar */}
+            <div className="flex-1 flex justify-center px-2">
+              <div className="w-full max-w-[560px] hidden sm:block">
+                <div className="h-9 rounded-[10px] bg-[#F4F7FB] flex items-center px-3 gap-2">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A0AEC0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                  </svg>
+                  <input className="w-full bg-transparent outline-none text-[13px] text-[#587181] placeholder:text-[#A0AEC0]" placeholder="جستجو..." />
+                </div>
+              </div>
+            </div>
 
-  </button>
+            {/* Icons (left side in RTL = visually left) */}
+            <div className="flex items-center gap-2">
+              <button onClick={() => setOpenNotifModal(true)} className="w-9 h-9 rounded-[10px] bg-[#F4F7FB] flex items-center justify-center hover:bg-[#E8F0FA] transition" aria-label="اعلان‌ها">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#587181" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+              </button>
+              <button onClick={() => setOpenMsgModal(true)} className="w-9 h-9 rounded-[10px] bg-[#F4F7FB] flex items-center justify-center hover:bg-[#E8F0FA] transition" aria-label="پیام‌ها">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#587181" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+              </button>
+              {/* Hamburger (mobile only) */}
+              <button
+                type="button"
+                aria-label="باز کردن منو"
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden w-9 h-9 rounded-[10px] bg-[#F4F7FB] flex items-center justify-center"
+              >
+                <span className="relative block w-5 h-4">
+                  <span className="absolute right-0 top-0 h-[2px] w-5 bg-[#587181] rounded" />
+                  <span className="absolute right-0 top-[7px] h-[2px] w-5 bg-[#587181] rounded" />
+                  <span className="absolute right-0 top-[14px] h-[2px] w-5 bg-[#587181] rounded" />
+                </span>
+              </button>
+            </div>
+          </header>
 
-  <div
-    className={[
-     
-      "absolute top-full left-0 z-50",
-      "pt-3",
-
-      "w-[160px] ",
-
-      "transition-all duration-200",
-
-      "lg:opacity-0 lg:pointer-events-none lg:-translate-y-2",
-      "lg:group-hover:opacity-100 lg:group-hover:pointer-events-auto lg:group-hover:translate-y-0",
-
-      userMenuOpen
-        ? "opacity-100 pointer-events-auto translate-y-0"
-        : "opacity-0 pointer-events-none -translate-y-2",
-    ].join(" ")}
-  >
-    <div
-      className="rounded-[14px] bg-white shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-[#eef0f4] p-1"
-      onClick={(e) => e.stopPropagation()}
-      dir="rtl"
-    >
-      <button
-        onClick={handleLogout}
-        className="
-          w-full flex items-center gap-3
-          px-3 py-3
-          rounded-[10px]
-
-          text-[12px] 
-          font-bold
-          text-[#C53030]
-
-          hover:bg-red-50
-          active:bg-red-100
-          transition
-          cursor-pointer
-
-        "
-      >
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-          <polyline points="16 17 21 12 16 7" />
-          <line x1="21" y1="12" x2="9" y2="12" />
-        </svg>
-
-        <span>خروج از حساب کاربری</span>
-      </button>
-    </div>
-  </div>
-</div>
-
-
-  <div className="flex-1 flex justify-center px-3">
-    <div className="w-full max-w-[680px] hidden sm:block">
-      <div className="h-10 rounded-[10px] bg-[#F9FCFF] flex items-center px-4">
-        <img src="/Vector (12).svg" alt="" />
-        <input
-          className="w-full bg-transparent pl-2 outline-none text-[14px] text-[#587181] placeholder:text-[#A0AEC0]"
-          placeholder="جستجو"
-        />
-      </div>
-    </div>
-  </div>
-
-  <div className="min-w-[120px] sm:min-w-[180px] flex items-center justify-end gap-3 sm:gap-4">
-  <img
-  src="/Vector (11).svg"
-  className="cursor-pointer"
-  alt="اعلان‌ها"
-  onClick={() => setOpenNotificationModal(true)}
-/>
-
-<img
-  src="/Group 237222.svg"
-  className="cursor-pointer"
-  alt="پیام‌ها"
-  onClick={() => setOpenMessageModal(true)}
-/>
-
-
-    <button
-      type="button"
-      aria-label="باز کردن منو"
-      onClick={() => setSidebarOpen(true)}
-      className="lg:hidden h-10 w-10 rounded-[10px] bg-[#F9FCFF] flex items-center justify-center active:scale-[0.98]"
-    >
-      <span className="relative block w-5 h-4">
-        <span className="absolute right-0 top-0 h-[2px] w-5 bg-[#587181] rounded" />
-        <span className="absolute right-0 top-[6px] h-[2px] w-5 bg-[#587181] rounded" />
-        <span className="absolute right-0 top-[12px] h-[2px] w-5 bg-[#587181] rounded" />
-      </span>
-    </button>
-  </div>
-</header>
-
-          <div className="p-4 sm:p-6">{children}</div>
+          {/* Page content */}
+          <div className="flex-1 p-4 sm:p-6">{children}</div>
         </div>
 
-        <aside className="hidden lg:block w-[260px] bg-[#F9FCFF] py-8 px-2">
-          <div className="h-[64px] flex items-center justify-between px-7">
-            <div className="flex px-2 items-center gap-5">
-              <img src="/Group 237546.svg" alt="" />
-              <span className="font-bold text-[26px] text-[#000000]">
-                پلتفرم امین
-              </span>
-            </div>
+        {/* ── Desktop Sidebar (right) ── */}
+        <aside className="hidden lg:flex flex-col w-[240px] bg-white border-l border-[#EEF0F4] shrink-0">
+          {/* Logo */}
+          <div className="h-[64px] flex items-center justify-center gap-3 border-b border-[#EEF0F4] px-4">
+            <img src="/Group 237546.svg" alt="" className="h-8" />
+            <span className="font-bold text-[20px] text-[#1A2B45]">پلتفرم امین</span>
           </div>
-          <NavLinks />
+          <div className="flex-1 overflow-y-auto">
+            <NavLinks hoveredKey={hoveredKey} setHoveredKey={setHoveredKey} pathname={pathname} />
+          </div>
         </aside>
 
+        {/* ── Mobile backdrop ── */}
         <div
-          className={[
-            "lg:hidden fixed inset-0 z-40 transition-opacity",
-            sidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
-          ].join(" ")}
+          className={`lg:hidden fixed inset-0 z-40 transition-opacity ${sidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
           onClick={() => setSidebarOpen(false)}
         >
           <div className="absolute inset-0 bg-black/40" />
         </div>
 
+        {/* ── Mobile Sidebar (slides in from right) ── */}
         <aside
-          className={[
-            "lg:hidden fixed top-0 right-0 z-50 h-full w-[85%] max-w-[320px] bg-[#F9FCFF] py-6 px-4",
-            "transition-transform duration-300",
-            sidebarOpen ? "translate-x-0" : "translate-x-full",
-          ].join(" ")}
+          className={`lg:hidden fixed top-0 right-0 z-50 h-full w-[80%] max-w-[300px] bg-white py-4 flex flex-col transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "translate-x-full"}`}
           role="dialog"
           aria-modal="true"
         >
-          <div className="h-[64px] flex items-center justify-center gap-12 px-3">
-            <div className="flex items-center gap-3">
-              <img src="/Group 237546.svg" alt="" />
-              <span className="font-bold text-[24px] text-[#000000]">
-                پلتفرم امین
-              </span>
-            </div>
-
-            <button
-              type="button"
-              aria-label="بستن منو"
-              onClick={() => setSidebarOpen(false)}
-              className="h-10 w-10 rounded-[10px] bg-white flex items-center justify-center"
-            >
-              <span className="text-[22px] leading-none">×</span>
-            </button>
-          </div>
-
-          <div className="px-3 mt-3 sm:hidden">
-            <div className="h-10 rounded-[10px] bg-white flex items-center px-4">
-              <img src="/Vector (12).svg" alt="" />
-              <input
-                className="w-full bg-transparent pl-2 outline-none text-[14px] text-[#587181] placeholder:text-[#A0AEC0]"
-                placeholder="جستجو"
-              />
+          <div className="flex items-center justify-between px-4 pb-3 border-b border-[#EEF0F4]">
+            <button onClick={() => setSidebarOpen(false)} className="w-8 h-8 rounded-[8px] bg-[#F4F7FB] flex items-center justify-center text-[20px] leading-none">×</button>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-[18px] text-[#1A2B45]">پلتفرم امین</span>
+              <img src="/Group 237546.svg" alt="" className="h-7" />
             </div>
           </div>
-
-          <div className="mt-4">
-            <NavLinks />
+          <div className="flex-1 overflow-y-auto">
+            <NavLinks hoveredKey={hoveredKey} setHoveredKey={setHoveredKey} pathname={pathname} onNavigate={() => setSidebarOpen(false)} />
           </div>
         </aside>
       </div>
-      {(openNotificationModal || openMessageModal) && (
-  <div
-    className="fixed inset-0 z-[999] bg-black/40 flex items-center justify-center px-4 sm:px-6"
-    onClick={() => {
-      setOpenNotificationModal(false);
-      setOpenMessageModal(false);
-    }}
-  >
-    <div onClick={(e) => e.stopPropagation()}>
-      {openNotificationModal && (
-        <div className="
-          w-full
-          max-w-[520px] md:max-w-[600px]
-          rounded-[18px]
-          bg-white
-          p-6 sm:p-8
-          shadow-2xl
-        ">
-          <h3 className="text-[20px] sm:text-[22px] font-bold mb-4">
-            اعلان‌ها
-          </h3>
 
-          <div className="space-y-3 text-[14px] sm:text-[15px] text-gray-700 max-h-[50vh] overflow-y-auto">
-            <div className="p-3 rounded-[10px] bg-[#F9FCFF]">
-              اعلان جدیدی وجود ندارد.
+      {/* ── Modals ── */}
+      {(openNotifModal || openMsgModal) && (
+        <div className="fixed inset-0 z-[999] bg-black/40 flex items-center justify-center px-4" onClick={() => { setOpenNotifModal(false); setOpenMsgModal(false); }}>
+          <div className="w-full max-w-[480px] rounded-[18px] bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()} dir="rtl">
+            <h3 className="text-[20px] font-bold mb-4">{openNotifModal ? "اعلان‌ها" : "پیام‌ها"}</h3>
+            <div className="p-3 rounded-[10px] bg-[#F4F7FB] text-[14px] text-gray-500">
+              {openNotifModal ? "اعلان جدیدی وجود ندارد." : "پیامی برای نمایش وجود ندارد."}
             </div>
+            <button
+              onClick={() => { setOpenNotifModal(false); setOpenMsgModal(false); }}
+              className="mt-5 w-full rounded-[12px] bg-gradient-to-l from-[#6FA0D6] to-[#3E66A8] py-3 text-white font-semibold hover:brightness-110 transition"
+            >
+              بستن
+            </button>
           </div>
-
-          <button
-            onClick={() => setOpenNotificationModal(false)}
-            className="
-              mt-6 w-full rounded-[12px]
-              bg-gradient-to-r from-[#6FA0D6] to-[#3E66A8]
-              py-3 text-white font-semibold
-              hover:brightness-110 transition
-            "
-          >
-            بستن
-          </button>
         </div>
       )}
-
-      {openMessageModal && (
-        <div className="
-          w-full
-          max-w-[520px] md:max-w-[600px]
-          rounded-[18px]
-          bg-white
-          p-6 sm:p-8
-          shadow-2xl
-        ">
-          <h3 className="text-[20px] sm:text-[22px] font-bold mb-4">
-            پیام‌ها
-          </h3>
-
-          <div className="space-y-3 text-[14px] sm:text-[15px] text-gray-700 max-h-[50vh] overflow-y-auto">
-            <div className="p-3 rounded-[10px] bg-[#F9FCFF]">
-              پیامی برای نمایش وجود ندارد.
-            </div>
-          </div>
-
-          <button
-            onClick={() => setOpenMessageModal(false)}
-            className="
-              mt-6 w-full rounded-[12px]
-              bg-gradient-to-r from-[#6FA0D6] to-[#3E66A8]
-              py-3 text-white font-semibold
-              hover:brightness-110 transition
-            "
-          >
-            بستن
-          </button>
-        </div>
-      )}
-    </div>
-  </div>
-)}
-
     </main>
   );
 }
