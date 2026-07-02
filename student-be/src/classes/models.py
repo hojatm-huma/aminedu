@@ -254,3 +254,145 @@ class ExerciseSubmission(models.Model):
 
     def __str__(self):
         return f"{self.student.user.username} → {self.exercise.title}"
+
+
+# ── Handout ───────────────────────────────────────────────────────────────────
+
+class Handout(models.Model):
+    lesson = models.ForeignKey(
+        "Lesson",
+        on_delete=models.CASCADE,
+        related_name="handouts",
+        verbose_name=_("Lesson"),
+    )
+    uploaded_by = models.ForeignKey(
+        "Teacher",
+        on_delete=models.CASCADE,
+        related_name="handouts",
+        verbose_name=_("Uploaded By"),
+    )
+    title = models.CharField(max_length=200, verbose_name=_("Title"))
+    description = models.TextField(blank=True, verbose_name=_("Description"))
+    file = models.FileField(upload_to="handouts/%Y/%m/", verbose_name=_("File"))
+    uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Uploaded At"))
+
+    class Meta:
+        verbose_name = _("Handout")
+        verbose_name_plural = _("Handouts")
+        ordering = ["-uploaded_at"]
+
+    def __str__(self):
+        return f"{self.lesson.name} — {self.title}"
+
+
+# ── Counseling ────────────────────────────────────────────────────────────────
+
+class CounselingSession(models.Model):
+    counselor = models.ForeignKey(
+        "Teacher",
+        on_delete=models.CASCADE,
+        related_name="counseling_sessions",
+        verbose_name=_("Counselor"),
+    )
+    title = models.CharField(max_length=200, verbose_name=_("Title"))
+    session_date = models.DateField(verbose_name=_("Date"))
+    starts_at = models.TimeField(verbose_name=_("Starts At"))
+    ends_at = models.TimeField(verbose_name=_("Ends At"))
+    capacity = models.PositiveIntegerField(default=20, verbose_name=_("Capacity"))
+    is_cancelled = models.BooleanField(default=False, verbose_name=_("Cancelled"))
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("Counseling Session")
+        verbose_name_plural = _("Counseling Sessions")
+        ordering = ["session_date", "starts_at"]
+
+    def __str__(self):
+        return f"{self.session_date} {self.starts_at} — {self.title}"
+
+    @property
+    def registered_count(self):
+        return self.registrations.count()
+
+
+class CounselingRegistration(models.Model):
+    session = models.ForeignKey(
+        "CounselingSession",
+        on_delete=models.CASCADE,
+        related_name="registrations",
+        verbose_name=_("Session"),
+    )
+    student = models.ForeignKey(
+        "Student",
+        on_delete=models.CASCADE,
+        related_name="counseling_registrations",
+        verbose_name=_("Student"),
+    )
+    registered_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Registered At"))
+
+    class Meta:
+        unique_together = ("session", "student")
+        verbose_name = _("Counseling Registration")
+        verbose_name_plural = _("Counseling Registrations")
+
+    def __str__(self):
+        return f"{self.student.user.username} → {self.session.title}"
+
+
+# ── Exam ──────────────────────────────────────────────────────────────────────
+
+class Exam(models.Model):
+    lesson = models.ForeignKey(
+        "Lesson",
+        on_delete=models.CASCADE,
+        related_name="exams",
+        verbose_name=_("Lesson"),
+    )
+    created_by = models.ForeignKey(
+        "Teacher",
+        on_delete=models.CASCADE,
+        related_name="exams",
+        verbose_name=_("Created By"),
+    )
+    title = models.CharField(max_length=200, verbose_name=_("Title"))
+    exam_date = models.DateField(verbose_name=_("Exam Date"))
+    starts_at = models.TimeField(verbose_name=_("Starts At"))
+    total_score = models.PositiveSmallIntegerField(default=20, verbose_name=_("Total Score"))
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("Exam")
+        verbose_name_plural = _("Exams")
+        ordering = ["exam_date", "starts_at"]
+
+    def __str__(self):
+        return f"{self.lesson.name} — {self.title} ({self.exam_date})"
+
+
+class ExamResult(models.Model):
+    exam = models.ForeignKey(
+        "Exam",
+        on_delete=models.CASCADE,
+        related_name="results",
+        verbose_name=_("Exam"),
+    )
+    student = models.ForeignKey(
+        "Student",
+        on_delete=models.CASCADE,
+        related_name="exam_results",
+        verbose_name=_("Student"),
+    )
+    score = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        verbose_name=_("Score"),
+    )
+    graded_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Graded At"))
+
+    class Meta:
+        unique_together = ("exam", "student")
+        verbose_name = _("Exam Result")
+        verbose_name_plural = _("Exam Results")
+
+    def __str__(self):
+        return f"{self.student.user.username}: {self.score}/{self.exam.total_score}"

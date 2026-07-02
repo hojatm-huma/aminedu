@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type QuestionStatus = "answered" | "pending";
 
 type Question = {
   id: number;
+  studentName?: string;
   subject: string;
   topic: string;
   body: string;
@@ -23,6 +24,7 @@ const SUBJECTS = ["ریاضی", "فیزیک", "شیمی", "ادبیات", "زب�
 const INITIAL_QUESTIONS: Question[] = [
   {
     id: 1,
+    studentName: "علی رضایی",
     subject: "ریاضی",
     topic: "مشتق توابع مرکب",
     body: "در مثال صفحه ۶۷ کتاب، چطور مشتق تابع sin(x²) را محاسبه می‌کنیم؟ مرحله سوم را متوجه نمی‌شوم.",
@@ -34,6 +36,7 @@ const INITIAL_QUESTIONS: Question[] = [
   },
   {
     id: 2,
+    studentName: "سارا حسینی",
     subject: "فیزیک",
     topic: "قانون دوم نیوتن در دستگاه آتوود",
     body: "در دستگاه آتوود وقتی دو جرم نابرابر داریم، چطور شتاب سیستم را بدست می‌آوریم؟",
@@ -45,6 +48,7 @@ const INITIAL_QUESTIONS: Question[] = [
   },
   {
     id: 3,
+    studentName: "مهدی علوی",
     subject: "شیمی",
     topic: "پیوند هیدروژنی",
     body: "فرق بین پیوند هیدروژنی درون‌مولکولی و بین‌مولکولی چیست؟ مثال می‌خوام.",
@@ -53,22 +57,108 @@ const INITIAL_QUESTIONS: Question[] = [
   },
 ];
 
-// ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CFG = {
   answered: { label: "پاسخ داده شد", bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-400" },
   pending:  { label: "در انتظار پاسخ", bg: "bg-amber-50",  text: "text-amber-700",  dot: "bg-amber-400"  },
 };
 
+export default function QAPage() {
+  const [role, setRole] = useState<"student" | "teacher" | null>(null);
+  const [questions, setQuestions] = useState<Question[]>(INITIAL_QUESTIONS);
+
+  useEffect(() => {
+    const savedRole = localStorage.getItem("role");
+    setRole(savedRole === "teacher" ? "teacher" : "student");
+  }, []);
+
+  const handleNew = (q: Question) => {
+    setQuestions((prev) => [q, ...prev]);
+  };
+
+  const handleAnswerSubmit = (qId: number, answerText: string) => {
+    setQuestions((prev) =>
+      prev.map((q) => {
+        if (q.id !== qId) return q;
+        return {
+          ...q,
+          status: "answered",
+          answer: answerText,
+          answeredBy: "استاد احمدی",
+          answeredAt: new Intl.DateTimeFormat("fa-IR-u-ca-persian", { year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()),
+        };
+      })
+    );
+  };
+
+  const answered = questions.filter((q) => q.status === "answered").length;
+  const pending  = questions.filter((q) => q.status === "pending").length;
+  const faNum = (n: number) => new Intl.NumberFormat("fa-IR").format(n);
+
+  if (!role) return null;
+
+  return (
+    <div dir="rtl" className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-[20px] font-bold text-[#1A2B45]">سوال و رفع اشکال {role === "teacher" && "(پنل معلم)"}</h2>
+        <div className="flex gap-2">
+          <span className="text-[12px] font-semibold bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full">
+            {faNum(answered)} پاسخ داده شده
+          </span>
+          <span className="text-[12px] font-semibold bg-amber-50 text-amber-700 px-3 py-1 rounded-full">
+            {faNum(pending)} در انتظار
+          </span>
+        </div>
+      </div>
+
+      {/* Form (Student only) */}
+      {role === "student" && <NewQuestionForm onSubmit={handleNew} />}
+
+      {/* Question list */}
+      {questions.length > 0 ? (
+        <div className="space-y-3">
+          <h3 className="text-[14px] font-bold text-[#9DB3C9]">
+            {role === "teacher" ? "صندوق سوالات دانش‌آموزان" : "سوال‌های قبلی شما"}
+          </h3>
+          {questions.map((q) => (
+            <QuestionCard key={q.id} q={q} role={role} onAnswer={handleAnswerSubmit} />
+          ))}
+        </div>
+      ) : (
+        <div className="bg-white rounded-[16px] border border-[#EEF0F4] py-14 flex items-center justify-center text-[#9DB3C9] text-[15px]">
+          سوالی ثبت نشده است
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Question card ─────────────────────────────────────────────────────────────
-function QuestionCard({ q }: { q: Question }) {
-  const [expanded, setExpanded] = useState(q.status === "answered" && q.id === 1 ? false : false);
+function QuestionCard({
+  q,
+  role,
+  onAnswer,
+}: {
+  q: Question;
+  role: "student" | "teacher";
+  onAnswer: (qId: number, answerText: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [answerText, setAnswerText] = useState("");
   const cfg = STATUS_CFG[q.status];
+
+  const handleSend = () => {
+    if (!answerText.trim()) return;
+    onAnswer(q.id, answerText.trim());
+    setAnswerText("");
+  };
 
   return (
     <div className="bg-white rounded-[16px] border border-[#EEF0F4] overflow-hidden">
       {/* Header row */}
       <button
-        className="w-full text-right px-5 py-4 flex items-start gap-4 hover:bg-[#FAFCFF] transition"
+        type="button"
+        className="w-full text-right px-5 py-4 flex items-start gap-4 hover:bg-[#FAFCFF] transition cursor-pointer"
         onClick={() => setExpanded((v) => !v)}
       >
         {/* Subject pill */}
@@ -80,7 +170,9 @@ function QuestionCard({ q }: { q: Question }) {
         <div className="flex-1 min-w-0 text-right">
           <p className="text-[15px] font-bold text-[#1A2B45] leading-snug">{q.topic}</p>
           <p className="text-[13px] text-[#9DB3C9] mt-0.5 truncate">{q.body}</p>
-          <p className="text-[11px] text-[#C4D3E0] mt-1">{q.submittedAt}</p>
+          <p className="text-[11px] text-[#C4D3E0] mt-1">
+            {q.submittedAt} {q.studentName && `· ارسال شده توسط: ${q.studentName}`}
+          </p>
         </div>
 
         {/* Status + chevron */}
@@ -104,11 +196,13 @@ function QuestionCard({ q }: { q: Question }) {
         <div className="border-t border-[#EEF0F4] px-5 py-4 space-y-4">
           {/* Student's question */}
           <div className="bg-[#F4F7FB] rounded-[12px] p-4">
-            <p className="text-[12px] font-bold text-[#9DB3C9] mb-1.5">سوال دانش‌آموز</p>
+            <p className="text-[12px] font-bold text-[#9DB3C9] mb-1.5">
+              {role === "teacher" ? `سوال ${q.studentName || "دانش‌آموز"}` : "سوال شما"}
+            </p>
             <p className="text-[14px] text-[#1A2B45] leading-relaxed">{q.body}</p>
           </div>
 
-          {/* Answer */}
+          {/* Answer section */}
           {q.status === "answered" && q.answer ? (
             <div className="bg-emerald-50 border border-emerald-100 rounded-[12px] p-4">
               <div className="flex items-center justify-between mb-2">
@@ -122,9 +216,29 @@ function QuestionCard({ q }: { q: Question }) {
               </div>
               <p className="text-[14px] text-[#1A2B45] leading-relaxed">{q.answer}</p>
             </div>
-          ) : (
+          ) : role === "student" ? (
             <div className="bg-amber-50 border border-amber-100 rounded-[12px] p-4 text-[13px] text-amber-600">
               سوال شما ثبت شده است. مدرس به زودی پاسخ خواهد داد.
+            </div>
+          ) : (
+            /* TEACHER: Provide Answer Input */
+            <div className="space-y-2">
+              <label className="block text-[12.5px] font-bold text-[#4A5568]">پاسخ به سوال دانش‌آموز</label>
+              <textarea
+                value={answerText}
+                onChange={(e) => setAnswerText(e.target.value)}
+                rows={3}
+                placeholder="پاسخ خود را بنویسید..."
+                className="w-full rounded-[10px] border border-[#DADADA] bg-white p-3 text-[13.5px] text-[#4A4543] outline-none focus:border-[#6FA0D6] resize-none leading-relaxed transition"
+              />
+              <button
+                type="button"
+                onClick={handleSend}
+                disabled={!answerText.trim()}
+                className="bg-gradient-to-l from-[#6FA0D6] to-[#3E66A8] text-white text-[13px] font-semibold px-4 py-2 rounded-[10px] hover:brightness-110 transition disabled:opacity-50 cursor-pointer"
+              >
+                ثبت و ارسال پاسخ
+              </button>
             </div>
           )}
         </div>
@@ -133,7 +247,7 @@ function QuestionCard({ q }: { q: Question }) {
   );
 }
 
-// ── New question form ─────────────────────────────────────────────────────────
+// ── New question form (For Student Only) ──────────────────────────────────────
 function NewQuestionForm({ onSubmit }: { onSubmit: (q: Question) => void }) {
   const [subject,  setSubject]  = useState("");
   const [topic,    setTopic]    = useState("");
@@ -158,6 +272,7 @@ function NewQuestionForm({ onSubmit }: { onSubmit: (q: Question) => void }) {
     setTimeout(() => {
       onSubmit({
         id: Date.now(),
+        studentName: "علی رضایی",
         subject,
         topic: topic.trim(),
         body: body.trim(),
@@ -177,7 +292,6 @@ function NewQuestionForm({ onSubmit }: { onSubmit: (q: Question) => void }) {
     <form onSubmit={handleSubmit} className="bg-white rounded-[16px] border border-[#EEF0F4] p-5 space-y-4">
       <h3 className="text-[16px] font-bold text-[#1A2B45]">ثبت سوال جدید</h3>
 
-      {/* Subject */}
       <div className="space-y-1.5">
         <label className="block text-[13px] font-semibold text-[#4A4543]">نام درس <span className="text-red-400">*</span></label>
         <select
@@ -191,7 +305,6 @@ function NewQuestionForm({ onSubmit }: { onSubmit: (q: Question) => void }) {
         {errors.subject && <p className="text-[12px] text-red-500">{errors.subject}</p>}
       </div>
 
-      {/* Topic */}
       <div className="space-y-1.5">
         <label className="block text-[13px] font-semibold text-[#4A4543]">عنوان سوال <span className="text-red-400">*</span></label>
         <input
@@ -203,7 +316,6 @@ function NewQuestionForm({ onSubmit }: { onSubmit: (q: Question) => void }) {
         {errors.topic && <p className="text-[12px] text-red-500">{errors.topic}</p>}
       </div>
 
-      {/* Body */}
       <div className="space-y-1.5">
         <label className="block text-[13px] font-semibold text-[#4A4543]">متن سوال <span className="text-red-400">*</span></label>
         <textarea
@@ -221,12 +333,11 @@ function NewQuestionForm({ onSubmit }: { onSubmit: (q: Question) => void }) {
         </div>
       </div>
 
-      {/* Submit */}
       <div className="flex items-center gap-3 pt-1">
         <button
           type="submit"
           disabled={loading}
-          className="flex items-center gap-2 bg-gradient-to-l from-[#6FA0D6] to-[#3E66A8] text-white font-semibold text-[14px] px-6 py-2.5 rounded-[12px] hover:brightness-110 transition disabled:opacity-60"
+          className="flex items-center gap-2 bg-gradient-to-l from-[#6FA0D6] to-[#3E66A8] text-white font-semibold text-[14px] px-6 py-2.5 rounded-[12px] hover:brightness-110 transition disabled:opacity-60 cursor-pointer"
         >
           {loading ? (
             <>
@@ -255,47 +366,5 @@ function NewQuestionForm({ onSubmit }: { onSubmit: (q: Question) => void }) {
         )}
       </div>
     </form>
-  );
-}
-
-// ── Main component ─────────────────────────────────────────────────────────────
-export default function QAPage() {
-  const [questions, setQuestions] = useState<Question[]>(INITIAL_QUESTIONS);
-
-  const handleNew = (q: Question) => {
-    setQuestions((prev) => [q, ...prev]);
-  };
-
-  const answered = questions.filter((q) => q.status === "answered").length;
-  const pending  = questions.filter((q) => q.status === "pending").length;
-
-  return (
-    <div dir="rtl" className="space-y-5">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-[20px] font-bold text-[#1A2B45]">سوال و رفع اشکال</h2>
-        <div className="flex gap-2">
-          <span className="text-[12px] font-semibold bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full">
-            {new Intl.NumberFormat("fa-IR").format(answered)} پاسخ داده شده
-          </span>
-          <span className="text-[12px] font-semibold bg-amber-50 text-amber-700 px-3 py-1 rounded-full">
-            {new Intl.NumberFormat("fa-IR").format(pending)} در انتظار
-          </span>
-        </div>
-      </div>
-
-      {/* Form */}
-      <NewQuestionForm onSubmit={handleNew} />
-
-      {/* Question list */}
-      {questions.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-[14px] font-bold text-[#9DB3C9]">سوال‌های قبلی</h3>
-          {questions.map((q) => (
-            <QuestionCard key={q.id} q={q} />
-          ))}
-        </div>
-      )}
-    </div>
   );
 }

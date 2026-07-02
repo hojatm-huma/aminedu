@@ -23,31 +23,30 @@ export default function LoginPage() {
     const u = username.trim();
     const p = password.trim();
 
-   
-   if(!u || !p){ 
-   if(!u && !p){
-    setError("لطفا نام کاربری و رمز عبور را وارد کنید.");
- 
-   } else if (!u) {
-      setError("لطفاً نام کاربری را وارد کنید.");
-    
-    } else {
-      setError("لطفا رمز عبور را وارد کنید.");
-  
-    }
-    return;
-  }
-    if (u !== VALID_USERNAME) {
-      setError("نام کاربری اشتباه است.");
-      return;
-    }else if (p !== VALID_PASSWORD){
-      setError("رمزعبور اشتباه است");
+    if(!u || !p){ 
+      if(!u && !p){
+        setError("لطفا نام کاربری و رمز عبور را وارد کنید.");
+      } else if (!u) {
+        setError("لطفاً نام کاربری را وارد کنید.");
+      } else {
+        setError("لطفا رمز عبور را وارد کنید.");
+      }
       return;
     }
 
-  
+    let role = "";
+    if (u === "123456789" && p === "123456789") {
+      role = "student";
+    } else if (u === "teacher" && p === "123456789") {
+      role = "teacher";
+    } else {
+      setError("نام کاربری یا رمزعبور اشتباه است.");
+      return;
+    }
+
     setError(null);
-    localStorage.setItem("username", u);
+    localStorage.setItem("username", u === "teacher" ? "استاد احمدی" : "علی رضایی");
+    localStorage.setItem("role", role);
     router.push(REDIRECT_TO);
   };
 

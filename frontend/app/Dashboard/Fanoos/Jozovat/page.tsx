@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Comment = {
@@ -67,35 +67,8 @@ const INITIAL_HANDOUTS: Handout[] = [
       { id: 3, author: "آقای رضایی", text: "فایل جدید آپلود شد، مشکل برطرف است.", date: "۱۴۰۳/۰۵/۰۲", isOwn: false },
     ],
   },
-  {
-    id: 4,
-    subject: "ادبیات",
-    title: "خلاصه آرایه‌های ادبی",
-    description: "جدول کامل آرایه‌های ادبی با تعریف و مثال از متون کلاسیک",
-    teacher: "خانم موسوی",
-    uploadedAt: "۱۴۰۳/۰۵/۰۳",
-    fileType: "doc",
-    fileSize: "۱.۲ مگابایت",
-    fileName: "literature_rhetorical.docx",
-    comments: [],
-  },
-  {
-    id: 5,
-    subject: "زبان انگلیسی",
-    title: "Grammar Reference Sheet",
-    description: "A quick reference guide for all tenses and grammar rules covered in the course",
-    teacher: "آقای صادقی",
-    uploadedAt: "۱۴۰۳/۰۵/۰۵",
-    fileType: "pdf",
-    fileSize: "۰.۸ مگابایت",
-    fileName: "english_grammar_ref.pdf",
-    comments: [],
-  },
 ];
 
-const ALL_SUBJECTS = ["همه", ...Array.from(new Set(INITIAL_HANDOUTS.map((h) => h.subject)))];
-
-// ── File type config ──────────────────────────────────────────────────────────
 const FILE_CFG: Record<string, { bg: string; text: string; label: string }> = {
   pdf: { bg: "bg-red-50",    text: "text-red-500",    label: "PDF"  },
   doc: { bg: "bg-blue-50",   text: "text-blue-500",   label: "DOC"  },
@@ -113,7 +86,382 @@ function FileIcon({ type }: { type: string }) {
   );
 }
 
-// ── Comment block ─────────────────────────────────────────────────────────────
+export default function JozovatPage() {
+  const [role, setRole] = useState<"student" | "teacher" | null>(null);
+  const [handouts, setHandouts] = useState<Handout[]>(INITIAL_HANDOUTS);
+  const [activeSubject, setActiveSubject] = useState("همه");
+  const [search, setSearch] = useState("");
+
+  // Create Handout Modal State
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [subject, setSubject] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [fileType, setFileType] = useState<"pdf" | "doc" | "ppt" | "img" | "zip">("pdf");
+  const [fileName, setFileName] = useState("");
+  const [fileSize, setFileSize] = useState("۱.۵ مگابایت");
+
+  useEffect(() => {
+    const savedRole = localStorage.getItem("role");
+    setRole(savedRole === "teacher" ? "teacher" : "student");
+  }, []);
+
+  const handleAddComment = (handoutId: number, text: string) => {
+    setHandouts((prev) =>
+      prev.map((h) =>
+        h.id !== handoutId ? h : {
+          ...h,
+          comments: [
+            ...h.comments,
+            {
+              id: Date.now(),
+              author: role === "teacher" ? "استاد" : "من",
+              text,
+              date: new Intl.DateTimeFormat("fa-IR-u-ca-persian", { year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()),
+              isOwn: true,
+            },
+          ],
+        }
+      )
+    );
+  };
+
+  const handleCreateHandout = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!subject.trim() || !title.trim() || !fileName.trim()) return;
+
+    const newHandout: Handout = {
+      id: Date.now(),
+      subject: subject.trim(),
+      title: title.trim(),
+      description: description.trim(),
+      teacher: role === "teacher" ? "استاد احمدی" : "مدرس موسسه",
+      uploadedAt: new Intl.DateTimeFormat("fa-IR-u-ca-persian", { year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()),
+      fileType,
+      fileSize,
+      fileName,
+      comments: [],
+    };
+
+    setHandouts((prev) => [newHandout, ...prev]);
+    setShowAddModal(false);
+
+    // Reset
+    setSubject("");
+    setTitle("");
+    setDescription("");
+    setFileType("pdf");
+    setFileName("");
+    setFileSize("۱.۵ مگابایت");
+  };
+
+  const handleDeleteHandout = (id: number) => {
+    if (confirm("آیا از حذف این جزوه مطمئن هستید؟")) {
+      setHandouts((prev) => prev.filter((h) => h.id !== id));
+    }
+  };
+
+  const subjectsList = ["همه", ...Array.from(new Set(handouts.map((h) => h.subject)))];
+
+  const filtered = handouts.filter((h) => {
+    const matchSubject = activeSubject === "همه" || h.subject === activeSubject;
+    const matchSearch  = !search || h.title.includes(search) || h.subject.includes(search) || h.teacher.includes(search);
+    return matchSubject && matchSearch;
+  });
+
+  const faNum = (n: number) => new Intl.NumberFormat("fa-IR").format(n);
+
+  if (!role) return null;
+
+  return (
+    <div dir="rtl" className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-[20px] font-bold text-[#1A2B45]">جزوات آموزشی {role === "teacher" && "(پنل معلم)"}</h2>
+          <p className="text-[13px] text-[#9DB3C9] mt-0.5">دانلود کتاب‌ها، درسنامه‌ها و فایل‌های ضمیمه درسی</p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className="text-[13px] text-[#9DB3C9] whitespace-nowrap">
+            {faNum(filtered.length)} جزوه یافت شد
+          </span>
+          {role === "teacher" && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-1.5 text-[13px] font-semibold text-white bg-gradient-to-l from-[#6FA0D6] to-[#3E66A8] px-4 py-2 rounded-[10px] hover:brightness-110 transition shadow-sm cursor-pointer"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              آپلود جزوه جدید
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Search + filter */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex-1 h-10 rounded-[10px] bg-white border border-[#EEF0F4] flex items-center px-3 gap-2">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A0AEC0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 bg-transparent outline-none text-[13px] text-[#587181] placeholder:text-[#C4D3E0]"
+            placeholder="جستجو در جزوات..."
+          />
+        </div>
+
+        <div className="flex gap-1.5 flex-wrap">
+          {subjectsList.map((s) => (
+            <button
+              key={s}
+              onClick={() => setActiveSubject(s)}
+              className={`text-[12px] font-semibold px-3 py-1.5 rounded-[10px] transition cursor-pointer ${
+                activeSubject === s
+                  ? "bg-gradient-to-l from-[#6FA0D6] to-[#3E66A8] text-white shadow-sm"
+                  : "bg-white border border-[#EEF0F4] text-[#9DB3C9] hover:border-[#6FA0D6] hover:text-[#3E66A8]"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Handout list */}
+      {filtered.length === 0 ? (
+        <div className="bg-white rounded-[16px] border border-[#EEF0F4] py-16 flex flex-col items-center text-[#9DB3C9]">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" className="mb-3 opacity-40">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <p className="text-[15px]">جزوه‌ای یافت نشد</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((h) => (
+            <HandoutCard
+              key={h.id}
+              handout={h}
+              role={role}
+              onAddComment={handleAddComment}
+              onDelete={handleDeleteHandout}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Upload Handout Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-xs" onClick={() => setShowAddModal(false)} />
+          <form
+            onSubmit={handleCreateHandout}
+            className="bg-white rounded-[18px] border border-[#EEF0F4] p-6 w-full max-w-md relative z-10 space-y-4 shadow-xl"
+          >
+            <h3 className="text-[18px] font-bold text-[#1A2B45]">آپلود جزوه آموزشی جدید</h3>
+
+            <div className="space-y-1">
+              <label className="text-[12px] font-bold text-[#9DB3C9]">نام درس</label>
+              <input
+                type="text"
+                required
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="مثلاً ریاضی"
+                className="w-full h-10 rounded-[10px] border border-[#DADADA] px-3 text-[13px] outline-none focus:border-[#6FA0D6] transition"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[12px] font-bold text-[#9DB3C9]">عنوان جزوه</label>
+              <input
+                type="text"
+                required
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="مثلاً درسنامه فصل اول مشتق"
+                className="w-full h-10 rounded-[10px] border border-[#DADADA] px-3 text-[13px] outline-none focus:border-[#6FA0D6] transition"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[12px] font-bold text-[#9DB3C9]">توضیحات کوتاه</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={2}
+                placeholder="توضیحات و سرفصل‌ها..."
+                className="w-full rounded-[10px] border border-[#DADADA] p-3 text-[13px] outline-none focus:border-[#6FA0D6] transition resize-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[12px] font-bold text-[#9DB3C9]">فرمت فایل</label>
+                <select
+                  value={fileType}
+                  onChange={(e) => setFileType(e.target.value as any)}
+                  className="w-full h-10 rounded-[10px] border border-[#DADADA] px-2 text-[13px] outline-none bg-white focus:border-[#6FA0D6] transition cursor-pointer"
+                >
+                  <option value="pdf">PDF</option>
+                  <option value="doc">DOC</option>
+                  <option value="ppt">PPT</option>
+                  <option value="img">IMG</option>
+                  <option value="zip">ZIP</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[12px] font-bold text-[#9DB3C9]">حجم فایل</label>
+                <input
+                  type="text"
+                  required
+                  value={fileSize}
+                  onChange={(e) => setFileSize(e.target.value)}
+                  placeholder="مثلاً ۲.۴ مگابایت"
+                  className="w-full h-10 rounded-[10px] border border-[#DADADA] px-3 text-[13px] outline-none focus:border-[#6FA0D6] transition"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[12px] font-bold text-[#9DB3C9]">نام فایل پیوستی</label>
+              <input
+                type="text"
+                required
+                value={fileName}
+                onChange={(e) => setFileName(e.target.value)}
+                placeholder="math_derivative_1.pdf"
+                className="w-full h-10 rounded-[10px] border border-[#DADADA] px-3 text-[13px] outline-none focus:border-[#6FA0D6] transition"
+              />
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="submit"
+                className="flex-1 h-10 rounded-[10px] bg-gradient-to-l from-[#6FA0D6] to-[#3E66A8] text-white text-[14px] font-semibold hover:brightness-110 transition cursor-pointer"
+              >
+                آپلود و ثبت جزوه
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                className="flex-1 h-10 rounded-[10px] border border-[#EEF0F4] hover:bg-[#F4F7FB] text-[#7A9BB5] text-[14px] font-semibold transition cursor-pointer"
+              >
+                انصراف
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Handout card component ───────────────────────────────────────────────────
+function HandoutCard({
+  handout,
+  role,
+  onAddComment,
+  onDelete,
+}: {
+  handout: Handout;
+  role: "student" | "teacher";
+  onAddComment: (id: number, text: string) => void;
+  onDelete: (id: number) => void;
+}) {
+  const [showComments, setShowComments] = useState(false);
+
+  return (
+    <div className="bg-white rounded-[16px] border border-[#EEF0F4] overflow-hidden hover:shadow-sm transition-shadow">
+      <div className="px-5 py-4 flex items-start gap-4">
+        {/* File icon */}
+        <FileIcon type={handout.fileType} />
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <span className="text-[12px] font-bold text-[#3E66A8] bg-[#EEF5FF] px-2.5 py-0.5 rounded-[8px]">
+              {handout.subject}
+            </span>
+            <span className="text-[11px] text-[#C4D3E0]">{handout.uploadedAt}</span>
+          </div>
+
+          <p className="text-[15px] font-bold text-[#1A2B45] leading-snug">{handout.title}</p>
+          <p className="text-[13px] text-[#7A9BB5] mt-0.5 leading-relaxed">{handout.description}</p>
+
+          <div className="flex flex-wrap items-center gap-3 mt-3">
+            <div className="flex items-center gap-1.5 text-[12px] text-[#9DB3C9]">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              </svg>
+              {handout.teacher}
+            </div>
+
+            <span className="text-[12px] text-[#C4D3E0]">{handout.fileSize}</span>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="shrink-0 flex flex-col items-end gap-2">
+          <div className="flex items-center gap-2">
+            {role === "teacher" && (
+              <button
+                onClick={() => onDelete(handout.id)}
+                className="p-1.5 bg-red-50 text-red-500 rounded-[10px] border border-red-100 hover:bg-red-100 transition cursor-pointer"
+                title="حذف جزوه"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+              </button>
+            )}
+
+            <a
+              href="#"
+              onClick={(e) => e.preventDefault()}
+              className="flex items-center gap-1.5 text-[13px] font-semibold text-white bg-gradient-to-l from-[#6FA0D6] to-[#3E66A8] px-3.5 py-1.5 rounded-[10px] hover:brightness-110 transition whitespace-nowrap"
+              title={handout.fileName}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              دانلود
+            </a>
+          </div>
+
+          <button
+            onClick={() => setShowComments((v) => !v)}
+            className={`flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded-[10px] transition cursor-pointer ${showComments ? "bg-[#EEF5FF] text-[#3E66A8]" : "text-[#9DB3C9] hover:bg-[#F4F7FB]"}`}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            {handout.comments.length > 0
+              ? `${new Intl.NumberFormat("fa-IR").format(handout.comments.length)} کامنت`
+              : "کامنت"}
+          </button>
+        </div>
+      </div>
+
+      {/* Comments section */}
+      {showComments && (
+        <CommentsSection
+          handoutId={handout.id}
+          comments={handout.comments}
+          onAdd={onAddComment}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Comment section component ─────────────────────────────────────────────────
 function CommentsSection({
   handoutId,
   comments,
@@ -138,7 +486,6 @@ function CommentsSection({
 
   return (
     <div className="border-t border-[#EEF0F4] px-5 py-4 bg-[#FAFCFF] space-y-3">
-      {/* Existing comments */}
       {comments.length > 0 && (
         <div className="space-y-2">
           {comments.map((c) => (
@@ -173,8 +520,7 @@ function CommentsSection({
         <button
           onClick={handleSend}
           disabled={!text.trim() || sending}
-          className="h-9 w-9 rounded-[10px] bg-gradient-to-l from-[#6FA0D6] to-[#3E66A8] flex items-center justify-center hover:brightness-110 transition disabled:opacity-40 shrink-0"
-          aria-label="ارسال"
+          className="h-9 w-9 rounded-[10px] bg-gradient-to-l from-[#6FA0D6] to-[#3E66A8] flex items-center justify-center hover:brightness-110 transition disabled:opacity-40 shrink-0 cursor-pointer"
         >
           {sending
             ? <svg className="animate-spin w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" strokeLinecap="round"/></svg>
@@ -182,186 +528,6 @@ function CommentsSection({
           }
         </button>
       </div>
-    </div>
-  );
-}
-
-// ── Handout card ──────────────────────────────────────────────────────────────
-function HandoutCard({
-  handout,
-  onAddComment,
-}: {
-  handout: Handout;
-  onAddComment: (id: number, text: string) => void;
-}) {
-  const [showComments, setShowComments] = useState(false);
-
-  return (
-    <div className="bg-white rounded-[16px] border border-[#EEF0F4] overflow-hidden hover:shadow-sm transition-shadow">
-      <div className="px-5 py-4 flex items-start gap-4">
-        {/* File icon */}
-        <FileIcon type={handout.fileType} />
-
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span className="text-[12px] font-bold text-[#3E66A8] bg-[#EEF5FF] px-2.5 py-0.5 rounded-[8px]">
-              {handout.subject}
-            </span>
-            <span className="text-[11px] text-[#C4D3E0]">{handout.uploadedAt}</span>
-          </div>
-
-          <p className="text-[15px] font-bold text-[#1A2B45] leading-snug">{handout.title}</p>
-          <p className="text-[13px] text-[#7A9BB5] mt-0.5 leading-relaxed">{handout.description}</p>
-
-          <div className="flex flex-wrap items-center gap-3 mt-3">
-            {/* Teacher */}
-            <div className="flex items-center gap-1.5 text-[12px] text-[#9DB3C9]">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-              </svg>
-              {handout.teacher}
-            </div>
-
-            {/* File size */}
-            <span className="text-[12px] text-[#C4D3E0]">{handout.fileSize}</span>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="shrink-0 flex flex-col items-end gap-2">
-          {/* Download */}
-          <a
-            href="#"
-            onClick={(e) => e.preventDefault()}
-            className="flex items-center gap-1.5 text-[13px] font-semibold text-white bg-gradient-to-l from-[#6FA0D6] to-[#3E66A8] px-3.5 py-1.5 rounded-[10px] hover:brightness-110 transition"
-            title={handout.fileName}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            دانلود
-          </a>
-
-          {/* Comment toggle */}
-          <button
-            onClick={() => setShowComments((v) => !v)}
-            className={`flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded-[10px] transition ${showComments ? "bg-[#EEF5FF] text-[#3E66A8]" : "text-[#9DB3C9] hover:bg-[#F4F7FB]"}`}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>
-            {handout.comments.length > 0
-              ? `${new Intl.NumberFormat("fa-IR").format(handout.comments.length)} کامنت`
-              : "کامنت"}
-          </button>
-        </div>
-      </div>
-
-      {/* Comments section */}
-      {showComments && (
-        <CommentsSection
-          handoutId={handout.id}
-          comments={handout.comments}
-          onAdd={onAddComment}
-        />
-      )}
-    </div>
-  );
-}
-
-// ── Main component ─────────────────────────────────────────────────────────────
-export default function JozovatPage() {
-  const [handouts, setHandouts] = useState<Handout[]>(INITIAL_HANDOUTS);
-  const [activeSubject, setActiveSubject] = useState("همه");
-  const [search, setSearch] = useState("");
-
-  const handleAddComment = (handoutId: number, text: string) => {
-    setHandouts((prev) =>
-      prev.map((h) =>
-        h.id !== handoutId ? h : {
-          ...h,
-          comments: [
-            ...h.comments,
-            {
-              id: Date.now(),
-              author: "من",
-              text,
-              date: new Intl.DateTimeFormat("fa-IR-u-ca-persian", { year:"numeric", month:"2-digit", day:"2-digit" }).format(new Date()),
-              isOwn: true,
-            },
-          ],
-        }
-      )
-    );
-  };
-
-  const filtered = handouts.filter((h) => {
-    const matchSubject = activeSubject === "همه" || h.subject === activeSubject;
-    const matchSearch  = !search || h.title.includes(search) || h.subject.includes(search) || h.teacher.includes(search);
-    return matchSubject && matchSearch;
-  });
-
-  return (
-    <div dir="rtl" className="space-y-5">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-[20px] font-bold text-[#1A2B45]">جزوات</h2>
-        <span className="text-[13px] text-[#9DB3C9]">
-          {new Intl.NumberFormat("fa-IR").format(filtered.length)} جزوه
-        </span>
-      </div>
-
-      {/* Search + subject filter */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        {/* Search */}
-        <div className="flex-1 h-10 rounded-[10px] bg-white border border-[#EEF0F4] flex items-center px-3 gap-2">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A0AEC0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-          </svg>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 bg-transparent outline-none text-[13px] text-[#587181] placeholder:text-[#C4D3E0]"
-            placeholder="جستجو در جزوات..."
-          />
-        </div>
-
-        {/* Subject filter chips */}
-        <div className="flex gap-1.5 flex-wrap">
-          {ALL_SUBJECTS.map((s) => (
-            <button
-              key={s}
-              onClick={() => setActiveSubject(s)}
-              className={`text-[12px] font-semibold px-3 py-1.5 rounded-[10px] transition ${
-                activeSubject === s
-                  ? "bg-gradient-to-l from-[#6FA0D6] to-[#3E66A8] text-white shadow-sm"
-                  : "bg-white border border-[#EEF0F4] text-[#9DB3C9] hover:border-[#6FA0D6] hover:text-[#3E66A8]"
-              }`}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Handout list */}
-      {filtered.length === 0 ? (
-        <div className="bg-white rounded-[16px] border border-[#EEF0F4] py-16 flex flex-col items-center text-[#9DB3C9]">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" className="mb-3 opacity-40">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-          </svg>
-          <p className="text-[15px]">جزوه‌ای یافت نشد</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filtered.map((h) => (
-            <HandoutCard key={h.id} handout={h} onAddComment={handleAddComment} />
-          ))}
-        </div>
-      )}
     </div>
   );
 }

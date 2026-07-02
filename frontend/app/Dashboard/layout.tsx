@@ -30,9 +30,9 @@ const NAV_ITEMS: NavItem[] = [
   { label: "پشتیبانی", key: "Poshtibani", route: "/Dashboard/Poshtibani", subtabs: [] },
 ];
 
-function ChevronLeft() {
+function ChevronLeft({ className }: { className?: string }) {
   return (
-    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={`w-4 h-4 shrink-0 ${className || ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M15 18l-6-6 6-6" />
     </svg>
   );
