@@ -247,7 +247,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <aside className="hidden lg:flex flex-col w-[240px] bg-white border-l border-[#EEF0F4] shrink-0">
           {/* Logo */}
           <div className="h-[64px] flex items-center justify-center gap-3 border-b border-[#EEF0F4] px-4">
-            <img src="/Group 237546.svg" alt="" className="h-8" />
+            <img src="/LOGO.png" alt="" className="h-8" />
             <span className="font-bold text-[20px] text-[#1A2B45]">پلتفرم امین</span>
           </div>
           <div className="flex-1 overflow-y-auto">
@@ -273,7 +273,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <button onClick={() => setSidebarOpen(false)} className="w-8 h-8 rounded-[8px] bg-[#F4F7FB] flex items-center justify-center text-[20px] leading-none">×</button>
             <div className="flex items-center gap-2">
               <span className="font-bold text-[18px] text-[#1A2B45]">پلتفرم امین</span>
-              <img src="/Group 237546.svg" alt="" className="h-7" />
+              <img src="/LOGO.png" alt="" className="h-7" />
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">

@@ -77,7 +77,7 @@ export default function LoginPage() {
           "
         >
           <div className="flex flex-row-reverse items-center gap-4 justify-center max-[480px]:hidden">
-            <img src="/Group 237546.svg" alt="" />
+            <img src="/LOGO.png" alt="" className="h-10 w-auto" />
             <h3 className="text-[26px] font-bold text-[#000000]">پلتفرم امین</h3>
           </div>
 
@@ -232,7 +232,7 @@ export default function LoginPage() {
 
           <div dir="ltr" className="hidden max-[480px]:flex mt-10 justify-center">
             <div className="flex items-center gap-3">
-              <img src="/Group 237546.svg" alt="" />
+              <img src="/LOGO.png" alt="" className="h-10 w-auto" />
               <span className="text-[26px] font-bold text-[#000000]">
                 پلتفرم امین
               </span>
