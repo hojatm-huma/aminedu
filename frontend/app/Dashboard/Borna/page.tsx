@@ -1,4 +1,4 @@
-export default function BarnaPage() {
+export default function BornaPage() {
   return (
     <div dir="rtl" className="flex items-center justify-center min-h-[60vh]">
       <div className="rounded-[18px] bg-white shadow-sm border border-[#EEF0F4] px-10 py-12 text-center">

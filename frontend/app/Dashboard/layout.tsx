@@ -23,7 +23,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   { label: "سنجه",     key: "Sanjeh",     route: "/Dashboard/Sanjeh",     subtabs: [] },
   { label: "سفینه",    key: "Safineh",    route: "/Dashboard/Safineh",    subtabs: [] },
-  { label: "برنا",     key: "Barna",      route: "/Dashboard/Barna",      subtabs: [] },
+  { label: "برنا",     key: "Borna",      route: "/Dashboard/Borna",      subtabs: [] },
   { label: "یاس",      key: "Yas",        route: "/Dashboard/Yas",        subtabs: [] },
   { label: "مهرانه",   key: "Mehraneh",   route: "/Dashboard/Mehraneh",   subtabs: [] },
   { label: "کادا",     key: "Kada",       route: "/Dashboard/Kada",       subtabs: [] },
