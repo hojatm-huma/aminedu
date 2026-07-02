@@ -30,10 +30,10 @@ const NAV_ITEMS: NavItem[] = [
   { label: "پشتیبانی", key: "Poshtibani", route: "/Dashboard/Poshtibani", subtabs: [] },
 ];
 
-function ChevronDown() {
+function ChevronLeft() {
   return (
     <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M19 9l-7 7-7-7" />
+      <path d="M15 18l-6-6 6-6" />
     </svg>
   );
 }
@@ -43,11 +43,13 @@ function NavLinks({
   setHoveredKey,
   pathname,
   onNavigate,
+  flyout = false,
 }: {
   hoveredKey: string | null;
   setHoveredKey: (k: string | null) => void;
   pathname: string;
   onNavigate?: () => void;
+  flyout?: boolean;
 }) {
   return (
     <nav dir="rtl" className="px-3 py-6 space-y-1">
@@ -61,6 +63,7 @@ function NavLinks({
         return (
           <div
             key={item.key}
+            className="relative"
             onMouseEnter={() => hasSubtabs && setHoveredKey(item.key)}
             onMouseLeave={() => setHoveredKey(null)}
           >
@@ -68,9 +71,15 @@ function NavLinks({
             {hasSubtabs ? (
               <div className={`flex items-center justify-between px-4 py-3 rounded-[14px] transition cursor-default select-none ${isActive || isHovered ? activeCls : idleCls}`}>
                 <span className="text-[16px] font-semibold">{item.label}</span>
-                <span className={`transition-transform duration-200 ${isHovered ? "rotate-180" : ""}`}>
-                  <ChevronDown />
-                </span>
+                {flyout ? (
+                  <span className={`transition-transform duration-200 ${isHovered ? "-translate-x-1" : ""}`}>
+                    <ChevronLeft />
+                  </span>
+                ) : (
+                  <span className={`transition-transform duration-200 ${isHovered ? "rotate-180" : ""}`}>
+                    <ChevronLeft className="rotate-270" />
+                  </span>
+                )}
               </div>
             ) : (
               <Link
@@ -82,29 +91,65 @@ function NavLinks({
               </Link>
             )}
 
-            {/* Subtabs — animated expand */}
+            {/* Subtabs */}
             {hasSubtabs && (
-              <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isHovered ? "max-h-80 opacity-100 mt-1" : "max-h-0 opacity-0"}`}>
-                <div className="mr-3 pr-3 border-r-2 border-[#6FA0D6]/40 space-y-1 pb-1">
-                  {item.subtabs.map((sub) => {
-                    const isSubActive = pathname === sub.route;
-                    return (
-                      <Link
-                        key={sub.route}
-                        href={sub.route}
-                        onClick={onNavigate}
-                        className={`block px-3 py-2 rounded-[10px] text-[14px] transition ${
-                          isSubActive
-                            ? "bg-[#DDE9F8] text-[#3E66A8] font-bold"
-                            : "text-[#7A9BB5] hover:bg-[#EEF5FF] hover:text-[#3E66A8]"
-                        }`}
-                      >
-                        {sub.label}
-                      </Link>
-                    );
-                  })}
+              flyout ? (
+                /* ── Desktop: flyout panel to the LEFT of sidebar ── */
+                <div
+                  className={[
+                    "absolute top-0 right-full z-50 pr-2 transition-all duration-200",
+                    isHovered
+                      ? "opacity-100 pointer-events-auto translate-x-0"
+                      : "opacity-0 pointer-events-none translate-x-2",
+                  ].join(" ")}
+                >
+                  <div className="bg-white rounded-[14px] shadow-[0_8px_32px_rgba(0,0,0,0.13)] border border-[#EEF0F4] py-2 min-w-[200px]" dir="rtl">
+                    {/* Arrow tip */}
+                    <div className="absolute top-3.5 right-0 translate-x-[6px] w-3 h-3 bg-white border-t border-r border-[#EEF0F4] rotate-45" />
+                    {item.subtabs.map((sub) => {
+                      const isSubActive = pathname === sub.route;
+                      return (
+                        <Link
+                          key={sub.route}
+                          href={sub.route}
+                          onClick={onNavigate}
+                          className={`flex items-center px-4 py-2.5 text-[14px] transition ${
+                            isSubActive
+                              ? "bg-[#EEF5FF] text-[#3E66A8] font-bold"
+                              : "text-[#4A5568] hover:bg-[#F4F8FF] hover:text-[#3E66A8]"
+                          }`}
+                        >
+                          {isSubActive && <span className="w-1.5 h-1.5 rounded-full bg-[#3E66A8] ml-2 shrink-0" />}
+                          {sub.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                /* ── Mobile: accordion expand below ── */
+                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isHovered ? "max-h-80 opacity-100 mt-1" : "max-h-0 opacity-0"}`}>
+                  <div className="mr-3 pr-3 border-r-2 border-[#6FA0D6]/40 space-y-1 pb-1">
+                    {item.subtabs.map((sub) => {
+                      const isSubActive = pathname === sub.route;
+                      return (
+                        <Link
+                          key={sub.route}
+                          href={sub.route}
+                          onClick={onNavigate}
+                          className={`block px-3 py-2 rounded-[10px] text-[14px] transition ${
+                            isSubActive
+                              ? "bg-[#DDE9F8] text-[#3E66A8] font-bold"
+                              : "text-[#7A9BB5] hover:bg-[#EEF5FF] hover:text-[#3E66A8]"
+                          }`}
+                        >
+                          {sub.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )
             )}
           </div>
         );
@@ -250,8 +295,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <img src="/LOGO.png" alt="" className="h-8" />
             <span className="font-bold text-[20px] text-[#1A2B45]">پلتفرم امین</span>
           </div>
-          <div className="flex-1 overflow-y-auto">
-            <NavLinks hoveredKey={hoveredKey} setHoveredKey={setHoveredKey} pathname={pathname} />
+          <div className="flex-1 overflow-visible">
+            <NavLinks hoveredKey={hoveredKey} setHoveredKey={setHoveredKey} pathname={pathname} flyout={true} />
           </div>
         </aside>
 
