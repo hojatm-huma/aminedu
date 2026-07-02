@@ -66,18 +66,29 @@ export default function KelasPage() {
   const today = new Date();
   const todayIdx = jsToPerIdx(today.getDay());
 
+  const [weekOffset, setWeekOffset] = useState(0);
+
   const weekDays = useMemo(() => {
-    const daysFromSat = jsToPerIdx(today.getDay());
-    const sat = new Date(today);
-    sat.setDate(today.getDate() - daysFromSat);
+    const baseDate = new Date(today);
+    baseDate.setDate(today.getDate() + weekOffset * 7);
+
+    const daysFromSat = jsToPerIdx(baseDate.getDay());
+    const sat = new Date(baseDate);
+    sat.setDate(baseDate.getDate() - daysFromSat);
 
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(sat);
       d.setDate(sat.getDate() + i);
       const { day, monthName } = getPersianDay(d);
-      return { dayOfWeek: i, dayName: WEEK_NAMES[i], persianDay: day, monthName, isToday: i === todayIdx };
+      return { 
+        dayOfWeek: i, 
+        dayName: WEEK_NAMES[i], 
+        persianDay: day, 
+        monthName, 
+        isToday: weekOffset === 0 && i === todayIdx 
+      };
     });
-  }, []);
+  }, [weekOffset, todayIdx]);
 
   const [selectedDay, setSelectedDay] = useState(todayIdx);
 
@@ -125,7 +136,7 @@ export default function KelasPage() {
         {role === "teacher" && (
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 text-[13px] font-semibold text-white bg-gradient-to-l from-[#6FA0D6] to-[#3E66A8] px-4 py-2 rounded-[10px] hover:brightness-110 transition shadow-sm"
+            className="flex items-center gap-1.5 text-[13px] font-semibold text-white bg-gradient-to-l from-[#6FA0D6] to-[#3E66A8] px-4 py-2 rounded-[10px] hover:brightness-110 transition shadow-sm cursor-pointer"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
@@ -133,6 +144,42 @@ export default function KelasPage() {
             تعریف کلاس جدید
           </button>
         )}
+      </div>
+
+      {/* ── Week navigation controller ── */}
+      <div className="flex items-center justify-between bg-white rounded-[14px] border border-[#EEF0F4] p-3">
+        <div className="flex items-center gap-2">
+          <span className="text-[13px] font-bold text-[#1A2B45]">
+            {weekOffset === 0 ? "هفته جاری" : weekOffset === 1 ? "هفته آینده" : `هفته (${weekOffset > 0 ? "+" : ""}${faNum(weekOffset)})`}
+          </span>
+        </div>
+        <div className="flex gap-1.5">
+          <button
+            onClick={() => setWeekOffset((o) => o - 1)}
+            className="p-1.5 rounded-[8px] border border-[#EEF0F4] hover:bg-[#F4F7FB] text-[#7A9BB5] transition cursor-pointer"
+            title="هفته قبل"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setWeekOffset(0)}
+            disabled={weekOffset === 0}
+            className="text-[12px] font-semibold px-3 py-1.5 rounded-[8px] border border-[#EEF0F4] hover:bg-[#F4F7FB] text-[#7A9BB5] disabled:opacity-40 transition cursor-pointer"
+          >
+            هفته جاری
+          </button>
+          <button
+            onClick={() => setWeekOffset((o) => o + 1)}
+            className="p-1.5 rounded-[8px] border border-[#EEF0F4] hover:bg-[#F4F7FB] text-[#7A9BB5] transition cursor-pointer"
+            title="هفته بعد"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* ── Day selector strip ── */}
