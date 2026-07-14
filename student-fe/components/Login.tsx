@@ -23,31 +23,33 @@ export default function LoginPage() {
     const u = username.trim();
     const p = password.trim();
 
-
-    if (!u || !p) {
-      if (!u && !p) {
+    if(!u || !p){ 
+      if(!u && !p){
         setError("لطفا نام کاربری و رمز عبور را وارد کنید.");
-
       } else if (!u) {
         setError("لطفاً نام کاربری را وارد کنید.");
-
       } else {
         setError("لطفا رمز عبور را وارد کنید.");
-
       }
       return;
     }
-    if (u !== VALID_USERNAME) {
-      setError("نام کاربری اشتباه است.");
-      return;
-    } else if (p !== VALID_PASSWORD) {
-      setError("رمزعبور اشتباه است");
+
+    let role = "";
+    let displayName = "";
+    if (u === "123456789" && p === "123456789") {
+      role = "student";
+      displayName = "علی رضایی";
+    } else if (u === "987654321" && p === "987654321") {
+      role = "teacher";
+      displayName = "استاد احمدی";
+    } else {
+      setError("نام کاربری یا رمزعبور اشتباه است.");
       return;
     }
 
-
     setError(null);
-    localStorage.setItem("username", u);
+    localStorage.setItem("username", displayName);
+    localStorage.setItem("role", role);
     router.push(REDIRECT_TO);
   };
 
@@ -77,7 +79,7 @@ export default function LoginPage() {
           "
         >
           <div className="flex flex-row-reverse items-center gap-4 justify-center max-[480px]:hidden">
-            <img src="/Group 237546.svg" alt="" />
+            <img src="/LOGO.png" alt="" className="h-10 w-auto" />
             <h3 className="text-[26px] font-bold text-[#000000]">پلتفرم امین</h3>
           </div>
 
@@ -113,18 +115,18 @@ export default function LoginPage() {
                 نام کاربری
               </label>
               <input
-                value={username}
-                onChange={(e) => {
-                  const onlyNumbers = e.target.value.replace(/[^0-9]/g, "");
-                  setUsername(onlyNumbers);
-                  if (error) setError(null);
-                }}
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                placeholder="نام کاربری خود را وارد کنید."
-                className="w-full text-[#808080] rounded-[8px] border border-[#DADADA] px-4 py-3 text-[14px] outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-              />
+  value={username}
+  onChange={(e) => {
+    const onlyNumbers = e.target.value.replace(/[^0-9]/g, "");
+    setUsername(onlyNumbers);
+    if (error) setError(null);
+  }}
+  type="text"
+  inputMode="numeric"
+  pattern="[0-9]*"
+  placeholder="نام کاربری خود را وارد کنید."
+  className="w-full text-[#808080] rounded-[8px] border border-[#DADADA] px-4 py-3 text-[14px] outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+/>
 
             </div>
 
@@ -134,19 +136,19 @@ export default function LoginPage() {
               </label>
 
               <div className="relative">
-                <input
-                  value={password}
-                  onChange={(e) => {
-                    const onlyNumbers = e.target.value.replace(/[^0-9]/g, "");
-                    setPassword(onlyNumbers);
-                    if (error) setError(null);
-                  }}
-                  type={showPass ? "text" : "password"}
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  placeholder="رمز عبور خود را وارد کنید."
-                  className="w-full text-[#808080] rounded-[8px] border border-[#DADADA] px-4 py-3 text-[14px] outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                />
+              <input
+  value={password}
+  onChange={(e) => {
+    const onlyNumbers = e.target.value.replace(/[^0-9]/g, "");
+    setPassword(onlyNumbers);
+    if (error) setError(null);
+  }}
+  type={showPass ? "text" : "password"}
+  inputMode="numeric"
+  pattern="[0-9]*"
+  placeholder="رمز عبور خود را وارد کنید."
+  className="w-full text-[#808080] rounded-[8px] border border-[#DADADA] px-4 py-3 text-[14px] outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+/>
 
 
                 <button
@@ -232,7 +234,7 @@ export default function LoginPage() {
 
           <div dir="ltr" className="hidden max-[480px]:flex mt-10 justify-center">
             <div className="flex items-center gap-3">
-              <img src="/Group 237546.svg" alt="" />
+              <img src="/LOGO.png" alt="" className="h-10 w-auto" />
               <span className="text-[26px] font-bold text-[#000000]">
                 پلتفرم امین
               </span>
