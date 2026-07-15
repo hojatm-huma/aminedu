@@ -8,7 +8,7 @@ from classes.models import (
     Student, Teacher, WeeklySchedule,
     Exercise, ExerciseSubmission,
     Handout, CounselingSession, CounselingRegistration,
-    Exam, ExamResult,
+    Exam, ExamResult, Question,
 )
 from classes.permissions import IsTeacher, IsStudent
 from classes.serializers import (
@@ -20,14 +20,18 @@ from classes.serializers import (
     HandoutSerializer,
     CounselingSessionSerializer,
     ExamSerializer,
+    QuestionSerializer,
+    QuestionCreateSerializer,
     # Teacher create/manage
     ExerciseCreateSerializer,
     ExerciseSubmissionDetailSerializer,
+    SubmissionGradeSerializer,
     HandoutCreateSerializer,
     CounselingSessionCreateSerializer,
     CounselingRegistrationSerializer,
     ExamCreateSerializer,
     ExamResultSerializer,
+    AnswerSerializer,
 )
 
 
@@ -335,3 +339,73 @@ class TeacherExamResultsView(generics.ListCreateAPIView):
             created_by=self.request.user.teacher_profile,
         )
         serializer.save(exam=exam)
+
+
+# ════════════════════════════════════════════════════════════════
+#  TEACHER: Grade homework submission
+# ════════════════════════════════════════════════════════════════
+
+class GradeSubmissionView(APIView):
+    """Teacher sets a grade on a specific student submission."""
+    permission_classes = [IsTeacher]
+
+    def patch(self, request, submission_id):
+        from django.utils import timezone
+        submission = get_object_or_404(ExerciseSubmission, pk=submission_id)
+        # Ensure the exercise belongs to this teacher
+        if submission.exercise.created_by != request.user.teacher_profile:
+            return Response({"detail": "Not your exercise."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = SubmissionGradeSerializer(submission, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(graded_at=timezone.now())
+        return Response(ExerciseSubmissionDetailSerializer(submission, context={"request": request}).data)
+
+
+# ════════════════════════════════════════════════════════════════
+#  Q&A
+# ════════════════════════════════════════════════════════════════
+
+class StudentQuestionListCreateView(generics.ListCreateAPIView):
+    permission_classes = [IsStudent]
+
+    def get_serializer_class(self):
+        return QuestionCreateSerializer if self.request.method == "POST" else QuestionSerializer
+
+    def get_queryset(self):
+        return Question.objects.filter(student=self.request.user.student_profile)
+
+    def perform_create(self, serializer):
+        serializer.save(student=self.request.user.student_profile)
+
+
+class TeacherQuestionListView(generics.ListAPIView):
+    """Teacher sees all pending (and answered) questions."""
+    serializer_class = QuestionSerializer
+    permission_classes = [IsTeacher]
+
+    def get_queryset(self):
+        qs = Question.objects.select_related("student", "student__user", "answered_by")
+        status_filter = self.request.query_params.get("status")
+        if status_filter in ("pending", "answered"):
+            qs = qs.filter(status=status_filter)
+        return qs
+
+
+class TeacherAnswerQuestionView(APIView):
+    """Teacher submits an answer to a student question."""
+    permission_classes = [IsTeacher]
+
+    def post(self, request, question_id):
+        from django.utils import timezone
+        question = get_object_or_404(Question, pk=question_id)
+        serializer = AnswerSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        question.answer      = serializer.validated_data["answer"]
+        question.answered_by = request.user.teacher_profile
+        question.answered_at = timezone.now()
+        question.status      = Question.Status.ANSWERED
+        question.save()
+
+        return Response(QuestionSerializer(question, context={"request": request}).data)

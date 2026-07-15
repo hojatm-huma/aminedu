@@ -3,7 +3,7 @@ from classes.models import (
     Class, Student, WeeklySchedule, Lesson, Teacher,
     Exercise, ExerciseSubmission,
     Handout, CounselingSession, CounselingRegistration,
-    Exam, ExamResult,
+    Exam, ExamResult, Question,
 )
 from rest_framework.fields import SerializerMethodField
 
@@ -198,10 +198,45 @@ class ExerciseSubmissionDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExerciseSubmission
-        fields = ["id", "student_name", "file", "submitted_at"]
+        fields = ["id", "student_name", "file", "submitted_at", "grade", "graded_at"]
 
 
 class ExerciseCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Exercise
         fields = ["id", "lesson", "title", "description", "due_date"]
+
+
+# ── Teacher: Grade a submission ───────────────────────────────────────────────
+
+class SubmissionGradeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExerciseSubmission
+        fields = ["grade"]
+
+
+# ── Q&A ───────────────────────────────────────────────────────────────────────
+
+class QuestionSerializer(serializers.ModelSerializer):
+    student_name  = serializers.CharField(source="student.full_name", read_only=True)
+    answered_by_name = serializers.CharField(source="answered_by.full_name", read_only=True)
+
+    class Meta:
+        model = Question
+        fields = [
+            "id", "subject", "topic", "body", "submitted_at",
+            "status", "answer", "answered_by_name", "answered_at",
+            "student_name",
+        ]
+        read_only_fields = ["submitted_at", "status", "answer", "answered_by_name", "answered_at"]
+
+
+class QuestionCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = ["id", "subject", "topic", "body"]
+
+
+class AnswerSerializer(serializers.Serializer):
+    """Used by teachers to post an answer to a question."""
+    answer = serializers.CharField()

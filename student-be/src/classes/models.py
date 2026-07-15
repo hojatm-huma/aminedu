@@ -247,6 +247,21 @@ class ExerciseSubmission(models.Model):
         verbose_name=_("Submitted At"),
     )
 
+    # ── Grading (filled by teacher) ─────────────────────────────────────────
+    grade = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name=_("Grade"),
+    )
+
+    graded_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("Graded At"),
+    )
+
     class Meta:
         unique_together = ("exercise", "student")
         verbose_name = _("Exercise Submission")
@@ -396,3 +411,50 @@ class ExamResult(models.Model):
 
     def __str__(self):
         return f"{self.student.user.username}: {self.score}/{self.exam.total_score}"
+
+
+# ── Q&A ───────────────────────────────────────────────────────────────────────
+
+class Question(models.Model):
+    class Status(models.TextChoices):
+        PENDING  = "pending",  _("Pending")
+        ANSWERED = "answered", _("Answered")
+
+    student = models.ForeignKey(
+        "Student",
+        on_delete=models.CASCADE,
+        related_name="questions",
+        verbose_name=_("Student"),
+    )
+
+    subject = models.CharField(max_length=100, verbose_name=_("Subject"))
+    topic   = models.CharField(max_length=200, verbose_name=_("Topic"))
+    body    = models.TextField(verbose_name=_("Body"))
+
+    submitted_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Submitted At"))
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING,
+        verbose_name=_("Status"),
+    )
+
+    # ── Answer (filled by teacher) ───────────────────────────────────────────
+    answer = models.TextField(blank=True, verbose_name=_("Answer"))
+    answered_by = models.ForeignKey(
+        "Teacher",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="answered_questions",
+        verbose_name=_("Answered By"),
+    )
+    answered_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Answered At"))
+
+    class Meta:
+        verbose_name = _("Question")
+        verbose_name_plural = _("Questions")
+        ordering = ["-submitted_at"]
+
+    def __str__(self):
+        return f"{self.student.user.username}: {self.topic} [{self.status}]"

@@ -4,7 +4,7 @@ from classes.models import (
     Exercise, ExerciseSubmission,
     Handout,
     CounselingSession, CounselingRegistration,
-    Exam, ExamResult,
+    Exam, ExamResult, Question,
 )
 
 
@@ -109,3 +109,10 @@ class ExamResultAdmin(admin.ModelAdmin):
     list_filter = ("exam__lesson",)
     search_fields = ("student__user__username", "exam__title")
 
+
+@admin.register(Question)
+class QuestionAdmin(admin.ModelAdmin):
+    list_display  = ("topic", "student", "status", "submitted_at", "answered_by")
+    list_filter   = ("status",)
+    search_fields = ("student__user__username", "topic", "subject")
+    readonly_fields = ("submitted_at", "answered_at")

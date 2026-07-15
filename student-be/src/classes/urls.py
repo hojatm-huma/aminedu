@@ -11,10 +11,12 @@ from classes.views import (
     ListCounselingSessionsView,
     RegisterCounselingView,
     ListExamsView,
+    StudentQuestionListCreateView,
     # Teacher
     TeacherExerciseListCreateView,
     TeacherExerciseDetailView,
     TeacherExerciseSubmissionsView,
+    GradeSubmissionView,
     TeacherHandoutListCreateView,
     TeacherHandoutDetailView,
     TeacherCounselingListCreateView,
@@ -23,6 +25,8 @@ from classes.views import (
     TeacherExamListCreateView,
     TeacherExamDetailView,
     TeacherExamResultsView,
+    TeacherQuestionListView,
+    TeacherAnswerQuestionView,
 )
 
 urlpatterns = [
@@ -38,11 +42,13 @@ urlpatterns = [
     path("counseling-sessions/",                ListCounselingSessionsView.as_view(),  name="counseling_sessions"),
     path("counseling-sessions/<int:session_id>/register/", RegisterCounselingView.as_view(), name="register_counseling"),
     path("exams/",                              ListExamsView.as_view(),               name="list_exams"),
+    path("questions/",                          StudentQuestionListCreateView.as_view(), name="student_questions"),
 
     # ── Teacher: Exercises ────────────────────────────────────────────────────
     path("teacher/exercises/",                              TeacherExerciseListCreateView.as_view(),  name="teacher_exercises"),
     path("teacher/exercises/<int:pk>/",                     TeacherExerciseDetailView.as_view(),      name="teacher_exercise_detail"),
     path("teacher/exercises/<int:exercise_id>/submissions/",TeacherExerciseSubmissionsView.as_view(), name="teacher_exercise_submissions"),
+    path("teacher/submissions/<int:submission_id>/grade/",  GradeSubmissionView.as_view(),            name="grade_submission"),
 
     # ── Teacher: Handouts ─────────────────────────────────────────────────────
     path("teacher/handouts/",         TeacherHandoutListCreateView.as_view(), name="teacher_handouts"),
@@ -57,4 +63,8 @@ urlpatterns = [
     path("teacher/exams/",                      TeacherExamListCreateView.as_view(), name="teacher_exams"),
     path("teacher/exams/<int:pk>/",             TeacherExamDetailView.as_view(),     name="teacher_exam_detail"),
     path("teacher/exams/<int:exam_id>/results/",TeacherExamResultsView.as_view(),   name="teacher_exam_results"),
+
+    # ── Teacher: Q&A ──────────────────────────────────────────────────────────
+    path("teacher/questions/",                          TeacherQuestionListView.as_view(),   name="teacher_questions"),
+    path("teacher/questions/<int:question_id>/answer/", TeacherAnswerQuestionView.as_view(), name="teacher_answer_question"),
 ]
