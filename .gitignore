@@ -40,3 +40,5 @@ build
 tsconfig.tsbuildinfo
 .ncurc.js
 knip.jsonc
+
+*.sqlite3
