@@ -37,9 +37,7 @@ class KlassRegistrationListView(generics.ListAPIView):
 
     def get_queryset(self):
         return (
-            KlassRegistration.objects.filter(
-                student__user=self.request.user
-            )
+            KlassRegistration.objects.filter(student__user=self.request.user)
             .select_related(
                 "klass__lesson",
                 "klass__teacher__user",
@@ -89,6 +87,4 @@ class RegistrationExerciseListView(generics.ListAPIView):
             pk=self.kwargs["pk"],
             student__user=self.request.user,
         )
-        return Exercise.objects.filter(klass=registration.klass).order_by(
-            "due_date"
-        )
+        return Exercise.objects.filter(klass=registration.klass).order_by("-due_date")

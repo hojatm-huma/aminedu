@@ -6,6 +6,12 @@ export type KlassRegistration = {
     exercise_count: number;
 };
 
+export type Exercise = {
+    id: number;
+    title: string;
+    due_date: string; // "YYYY-MM-DD"
+};
+
 export type KlassSchedule = {
     id: number;
     klass_id: number;

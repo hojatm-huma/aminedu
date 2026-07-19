@@ -1,8 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import {
+  MdAssignment,
+  MdEvent,
+  MdExpandMore,
+  MdMenuBook,
+  MdPerson,
+} from "react-icons/md";
 import { useClasses } from "@/libs/hooks/apis/classes";
-import { KlassRegistration } from "@/libs/types/classes";
+import { Exercise, KlassRegistration } from "@/libs/types/classes";
 
 const STRIPE_COLORS = [
   "#3E66A8",
@@ -17,10 +25,28 @@ const STRIPE_COLORS = [
 const faNum = (n: number | string) =>
   new Intl.NumberFormat("fa-IR").format(Number(n) || 0);
 
+const faDate = (isoDate: string) => {
+  const parsed = new Date(isoDate);
+  if (Number.isNaN(parsed.getTime())) return isoDate;
+  return new Intl.DateTimeFormat("fa-IR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(parsed);
+};
+
+type ExercisesState = {
+  items?: Exercise[];
+  loading: boolean;
+  error: boolean;
+};
+
 export default function FanoosPage() {
-  const { getRegistrations } = useClasses();
+  const { getRegistrations, getRegistrationExercises } = useClasses();
   const [registrations, setRegistrations] = useState<KlassRegistration[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [exercises, setExercises] = useState<Record<number, ExercisesState>>({});
 
   useEffect(() => {
     getRegistrations()
@@ -28,6 +54,39 @@ export default function FanoosPage() {
       .catch(() => setRegistrations([]))
       .finally(() => setLoading(false));
   }, []);
+
+  const toggle = useCallback(
+    (registrationId: number) => {
+      setExpandedId((current) =>
+        current === registrationId ? null : registrationId,
+      );
+
+      // Fetch once per registration, then reuse the cached result.
+      setExercises((current) => {
+        if (current[registrationId]) return current;
+
+        getRegistrationExercises(registrationId)
+          .then((res) =>
+            setExercises((prev) => ({
+              ...prev,
+              [registrationId]: { items: res.data, loading: false, error: false },
+            })),
+          )
+          .catch(() =>
+            setExercises((prev) => ({
+              ...prev,
+              [registrationId]: { loading: false, error: true },
+            })),
+          );
+
+        return {
+          ...current,
+          [registrationId]: { loading: true, error: false },
+        };
+      });
+    },
+    [getRegistrationExercises],
+  );
 
   return (
     <div dir="rtl" className="space-y-5">
@@ -44,87 +103,111 @@ export default function FanoosPage() {
         </div>
       ) : registrations.length === 0 ? (
         <div className="rounded-[16px] bg-white border border-[#EEF0F4] py-16 flex flex-col items-center justify-center text-[#9DB3C9]">
-          <svg
-            width="50"
-            height="50"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="mb-3 opacity-40"
-          >
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-          </svg>
+          <MdMenuBook size={50} className="mb-3 opacity-40" />
           <p className="text-[15px]">در هیچ کلاسی ثبت‌نام نکرده‌اید</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {registrations.map((reg, idx) => (
-            <div
-              key={reg.id}
-              className="bg-white rounded-[14px] border border-[#EEF0F4] flex overflow-hidden hover:shadow-md transition-shadow"
-            >
-              {/* Color stripe */}
+          {registrations.map((reg, idx) => {
+            const isExpanded = expandedId === reg.id;
+            const state = exercises[reg.id];
+
+            return (
               <div
-                className="w-[5px] shrink-0"
-                style={{
-                  background: STRIPE_COLORS[idx % STRIPE_COLORS.length],
-                }}
-              />
+                key={reg.id}
+                className="bg-white rounded-[14px] border border-[#EEF0F4] flex overflow-hidden hover:shadow-md transition-shadow"
+              >
+                {/* Color stripe */}
+                <div
+                  className="w-[5px] shrink-0"
+                  style={{
+                    background: STRIPE_COLORS[idx % STRIPE_COLORS.length],
+                  }}
+                />
 
-              <div className="flex-1 px-5 py-4 flex items-center gap-5">
-                {/* Class name & teacher */}
-                <div className="min-w-0 flex-1">
-                  <p className="text-[17px] font-bold text-[#1A2B45] truncate">
-                    {reg.name}
-                  </p>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <svg
-                      width="13"
-                      height="13"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#9DB3C9"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                    <span className="text-[13px] text-[#7A9BB5] truncate">
-                      {reg.teacher}
-                    </span>
-                  </div>
-                </div>
+                <div className="flex-1 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => toggle(reg.id)}
+                    aria-expanded={isExpanded}
+                    aria-controls={`exercises-${reg.id}`}
+                    className="w-full text-right px-5 py-4 flex items-center gap-5 cursor-pointer"
+                  >
+                    {/* Class name & teacher */}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[17px] font-bold text-[#1A2B45] truncate">
+                        {reg.name}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <MdPerson size={13} className="text-[#9DB3C9]" />
+                        <span className="text-[13px] text-[#7A9BB5] truncate">
+                          {reg.teacher}
+                        </span>
+                      </div>
+                    </div>
 
-                {/* Exercise count pill */}
-                <div className="mr-auto shrink-0">
-                  <span className="flex items-center gap-1.5 text-[12px] bg-[#EEF5FF] text-[#3E66A8] font-semibold px-3 py-1.5 rounded-full whitespace-nowrap">
-                    <svg
-                      width="13"
-                      height="13"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                    {/* Exercise count pill */}
+                    <div className="mr-auto shrink-0">
+                      <span className="flex items-center gap-1.5 text-[12px] bg-[#EEF5FF] text-[#3E66A8] font-semibold px-3 py-1.5 rounded-full whitespace-nowrap">
+                        <MdAssignment size={13} />
+                        {faNum(reg.exercise_count)} تمرین
+                      </span>
+                    </div>
+
+                    <MdExpandMore
+                      size={18}
+                      className={`shrink-0 text-[#9DB3C9] transition-transform duration-200 ${
+                        isExpanded ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {isExpanded && (
+                    <div
+                      id={`exercises-${reg.id}`}
+                      className="bg-[#F2F4F6] px-5 py-4"
                     >
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                      <line x1="9" y1="13" x2="15" y2="13" />
-                      <line x1="9" y1="17" x2="15" y2="17" />
-                    </svg>
-                    {faNum(reg.exercise_count)} تمرین
-                  </span>
+                      {state?.loading ? (
+                        <p className="text-[14px] text-[#9DB3C9] py-3">
+                          در حال بارگذاری تمرین‌ها...
+                        </p>
+                      ) : state?.error ? (
+                        <p className="text-[14px] text-[#BA1A1A] py-3">
+                          خطا در دریافت تمرین‌ها
+                        </p>
+                      ) : state?.items?.length ? (
+                        <ul className="space-y-2">
+                          {state.items.map((exercise) => (
+                            <li key={exercise.id}>
+                              <Link
+                                href={`/Dashboard/Fanoos/Tamrin/${exercise.id}`}
+                                className="bg-white rounded-[10px] px-4 py-3 flex items-center gap-4 hover:bg-[#FAFCFF] transition-colors"
+                              >
+                                <span className="text-[15px] text-[#191C1E] min-w-0 flex-1 truncate">
+                                  {exercise.title}
+                                </span>
+                                <span className="flex items-center gap-1.5 text-[12.5px] text-[#424753] shrink-0 whitespace-nowrap">
+                                  <MdEvent
+                                    size={13}
+                                    className="text-[#9DB3C9]"
+                                  />
+                                  {faDate(exercise.due_date)}
+                                </span>
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-[14px] text-[#9DB3C9] py-3">
+                          تمرینی برای این کلاس ثبت نشده است
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

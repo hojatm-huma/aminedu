@@ -4,5 +4,6 @@ export function useClasses() {
     return {
         getSchedule: classApi.getSchedule,
         getRegistrations: classApi.getRegistrations,
+        getRegistrationExercises: classApi.getRegistrationExercises,
     };
 }
