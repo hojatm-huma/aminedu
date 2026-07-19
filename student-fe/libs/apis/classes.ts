@@ -1,4 +1,9 @@
-import { Exercise, KlassRegistration, KlassSchedule } from "@/libs/types/classes";
+import {
+    Exercise,
+    ExerciseDetail,
+    KlassRegistration,
+    KlassSchedule,
+} from "@/libs/types/classes";
 import { apiClient } from "./client";
 
 export const classApi = {
@@ -18,5 +23,9 @@ export const classApi = {
     getRegistrationExercises: (registrationId: number) =>
         apiClient.get<Exercise[]>(
             `/classes/klass/registration/${registrationId}/exercises/`,
+        ),
+    getRegistrationExerciseDetail: (registrationId: number, exerciseId: number) =>
+        apiClient.get<ExerciseDetail>(
+            `/classes/klass/registration/${registrationId}/exercises/${exerciseId}/`,
         ),
 };

@@ -5,5 +5,6 @@ export function useClasses() {
         getSchedule: classApi.getSchedule,
         getRegistrations: classApi.getRegistrations,
         getRegistrationExercises: classApi.getRegistrationExercises,
+        getRegistrationExerciseDetail: classApi.getRegistrationExerciseDetail,
     };
 }

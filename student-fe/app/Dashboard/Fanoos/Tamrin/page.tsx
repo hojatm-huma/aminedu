@@ -180,7 +180,7 @@ export default function FanoosPage() {
                           {state.items.map((exercise) => (
                             <li key={exercise.id}>
                               <Link
-                                href={`/Dashboard/Fanoos/Tamrin/${exercise.id}`}
+                                href={`/Dashboard/Fanoos/Tamrin/${exercise.id}?registrationId=${reg.id}`}
                                 className="bg-white rounded-[10px] px-4 py-3 flex items-center gap-4 hover:bg-[#FAFCFF] transition-colors"
                               >
                                 <span className="text-[15px] text-[#191C1E] min-w-0 flex-1 truncate">
