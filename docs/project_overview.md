@@ -10,6 +10,7 @@ Student backend code resides in `student-be`. It is written in django. We use dj
 - Implement TDD. If you want to change a test ask for permission.
 - Use uv to run python commands or install dependencies
 - If you change a model, update diagrams in `docs/models_diagram.md`
+- Use plural name in url and prefer -
 
 ## Student Frontend
 
