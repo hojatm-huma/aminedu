@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from classes.models import (
+    Exercise,
     KlassRegistration,
     KlassSchedule,
     Student,
@@ -47,6 +48,16 @@ class KlassRegistrationSerializer(serializers.ModelSerializer):
             "name",
             "teacher",
             "exercise_count",
+        ]
+
+
+class ExerciseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Exercise
+        fields = [
+            "id",
+            "title",
+            "due_date",
         ]
 
 

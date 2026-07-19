@@ -1,13 +1,16 @@
 from django.db.models import Count
+from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from classes.models import (
+    Exercise,
     KlassRegistration,
     KlassSchedule,
     Student,
 )
 from classes.permissions import IsStudent
 from classes.serializers import (
+    ExerciseSerializer,
     KlassRegistrationSerializer,
     KlassScheduleSerializer,
     RetrieveProfileSerializer,
@@ -68,3 +71,24 @@ class KlassScheduleListView(generics.ListAPIView):
             queryset = queryset.filter(day_of_week=day_of_week)
 
         return queryset
+
+
+class RegistrationExerciseListView(generics.ListAPIView):
+    """List the exercises of a class the current student is registered in.
+
+    The registration is identified by its id in the URL and must belong to
+    the requesting student. Exercises are ordered by ``due_date``.
+    """
+
+    serializer_class = ExerciseSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get_queryset(self):
+        registration = get_object_or_404(
+            KlassRegistration,
+            pk=self.kwargs["pk"],
+            student__user=self.request.user,
+        )
+        return Exercise.objects.filter(klass=registration.klass).order_by(
+            "due_date"
+        )
