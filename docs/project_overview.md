@@ -2,6 +2,9 @@
 
 This project is a learning management system. Coordinating interaction between students and teachers.
 
+## How to work?
+Plan use a good model, show me the plan, after approval do all the jobs using a cheap model.
+
 ## Student Backend
 Student backend code resides in `student-be`. It is written in django. We use django-restframework.
 
