@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useClasses } from "@/libs/hooks/apis/classes";
+import { KlassSchedule } from "@/libs/types/classes";
 
 // ── Persian calendar helpers ──────────────────────────────────────────────────
 function faToEn(fa: string): number {
@@ -24,31 +26,17 @@ function jsToPerIdx(jsDay: number) { return (jsDay + 1) % 7; }
 
 const WEEK_NAMES = ["شنبه","یکشنبه","دوشنبه","سه‌شنبه","چهارشنبه","پنجشنبه","جمعه"];
 
-type ClassItem = {
-  id: number;
-  lesson: { name: string };
-  teacher: { full_name: string };
-  starts_at: string;
-  ends_at: string;
-  day_of_week: number; // 0=Saturday … 6=Friday
-};
-
-const INITIAL_CLASSES: ClassItem[] = [
-  { id:1, lesson:{name:"ریاضی"},         teacher:{full_name:"آقای احمدی"},  starts_at:"08:00", ends_at:"09:30", day_of_week:0 },
-  { id:2, lesson:{name:"فیزیک"},         teacher:{full_name:"خانم کریمی"},  starts_at:"10:00", ends_at:"11:30", day_of_week:0 },
-  { id:3, lesson:{name:"شیمی"},          teacher:{full_name:"آقای رضایی"}, starts_at:"13:00", ends_at:"14:30", day_of_week:1 },
-  { id:4, lesson:{name:"ادبیات"},        teacher:{full_name:"خانم موسوی"},  starts_at:"09:00", ends_at:"10:30", day_of_week:2 },
-  { id:5, lesson:{name:"زبان انگلیسی"}, teacher:{full_name:"آقای صادقی"},  starts_at:"11:00", ends_at:"12:30", day_of_week:2 },
-  { id:6, lesson:{name:"عربی"},          teacher:{full_name:"خانم حسینی"},  starts_at:"08:30", ends_at:"10:00", day_of_week:4 },
-  { id:7, lesson:{name:"دینی"},          teacher:{full_name:"آقای مهدوی"},  starts_at:"14:00", ends_at:"15:30", day_of_week:4 },
-  { id:8, lesson:{name:"ریاضی"},         teacher:{full_name:"آقای احمدی"},  starts_at:"08:00", ends_at:"09:30", day_of_week:3 },
-];
+// The API returns times as "HH:MM:SS"; the UI renders "HH:MM".
+function toHm(time: string): string {
+  return time?.slice(0, 5) ?? time;
+}
 
 const STRIPE_COLORS = ["#3E66A8","#5B8AC4","#7FA8D5","#4A7BB8","#2D5A9E","#6495C4","#3870B0"];
 
 export default function KelasPage() {
+  const { getSchedule } = useClasses();
   const [role, setRole] = useState<"student" | "teacher" | null>(null);
-  const [classes, setClasses] = useState<ClassItem[]>(INITIAL_CLASSES);
+  const [classes, setClasses] = useState<KlassSchedule[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
 
   // New class form state
@@ -61,6 +49,12 @@ export default function KelasPage() {
   useEffect(() => {
     const savedRole = localStorage.getItem("role");
     setRole(savedRole === "teacher" ? "teacher" : "student");
+  }, []);
+
+  useEffect(() => {
+    getSchedule()
+      .then((res) => setClasses(res.data))
+      .catch(() => setClasses([]));
   }, []);
 
   const today = new Date();
@@ -102,10 +96,11 @@ export default function KelasPage() {
     e.preventDefault();
     if (!lessonName.trim() || !teacherName.trim()) return;
 
-    const newClass: ClassItem = {
+    const newClass: KlassSchedule = {
       id: Date.now(),
-      lesson: { name: lessonName.trim() },
-      teacher: { full_name: teacherName.trim() },
+      klass_id: Date.now(),
+      lesson: lessonName.trim(),
+      teacher: teacherName.trim(),
       starts_at: startsAt,
       ends_at: endsAt,
       day_of_week: dayOfWeek,
@@ -254,9 +249,9 @@ export default function KelasPage() {
               <div className="flex-1 px-5 py-4 flex items-center gap-5">
                 {/* Time block */}
                 <div className="shrink-0 text-center min-w-[60px]">
-                  <div className="text-[15px] font-bold text-[#3E66A8]">{cls.starts_at}</div>
+                  <div className="text-[15px] font-bold text-[#3E66A8]">{toHm(cls.starts_at)}</div>
                   <div className="text-[10px] text-[#C4D3E0] my-0.5">—</div>
-                  <div className="text-[15px] font-bold text-[#3E66A8]">{cls.ends_at}</div>
+                  <div className="text-[15px] font-bold text-[#3E66A8]">{toHm(cls.ends_at)}</div>
                 </div>
 
                 {/* Divider */}
@@ -264,14 +259,14 @@ export default function KelasPage() {
 
                 {/* Lesson & teacher */}
                 <div className="min-w-0 flex-1 sm:flex-initial">
-                  <p className="text-[17px] font-bold text-[#1A2B45] truncate">{cls.lesson.name}</p>
+                  <p className="text-[17px] font-bold text-[#1A2B45] truncate">{cls.lesson}</p>
                   <div className="flex items-center gap-1.5 mt-1">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9DB3C9"
                       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                       <circle cx="12" cy="7" r="4" />
                     </svg>
-                    <span className="text-[13px] text-[#7A9BB5] truncate">{cls.teacher.full_name}</span>
+                    <span className="text-[13px] text-[#7A9BB5] truncate">{cls.teacher}</span>
                   </div>
                 </div>
 

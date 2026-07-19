@@ -1,11 +1,5 @@
+import { StudentProfile } from "@/libs/types/students";
 import { apiClient } from "./client";
-
-export type StudentProfile = {
-    id: number;
-    first_name: string;
-    last_name: string;
-    national_code: string;
-};
 
 export const studentApi = {
     getProfile: () => {

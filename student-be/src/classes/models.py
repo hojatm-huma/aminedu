@@ -165,6 +165,15 @@ class KlassRegistration(BaseModel):
     klass = models.ForeignKey(
         Klass,
         on_delete=models.CASCADE,
+        related_name="registrations",
+        verbose_name=_("Class"),
+    )
+
+    student = models.ForeignKey(
+        "Student",
+        on_delete=models.CASCADE,
+        related_name="registrations",
+        verbose_name=_("Student"),
     )
 
 
