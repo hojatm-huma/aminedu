@@ -55,6 +55,8 @@ classDiagram
     }
 
     class ExerciseComment {
+        +exercise
         +commenter
+        +comment
     }
 ```

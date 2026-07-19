@@ -89,7 +89,14 @@ class ExerciseFileInline(admin.TabularInline):
 
 @admin.register(Exercise)
 class ExerciseAdmin(admin.ModelAdmin):
-    list_display = ("id", "title", "klass", "created_by", "due_date", "created_at")
+    list_display = (
+        "id",
+        "title",
+        "klass",
+        "created_by",
+        "due_date",
+        "created_at",
+    )
     list_filter = ("due_date", "klass__lesson__field_of_study")
     search_fields = ("title", "description")
     raw_id_fields = ("klass", "created_by")
@@ -117,4 +124,5 @@ class ExerciseSubmissionAdmin(admin.ModelAdmin):
 
 @admin.register(ExerciseComment)
 class ExerciseCommentAdmin(admin.ModelAdmin):
-    list_display = ("id", "commenter", "created_at")
+    list_display = ("id", "exercise", "commenter", "created_at")
+    raw_id_fields = ("exercise", "commenter")

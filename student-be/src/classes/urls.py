@@ -2,6 +2,7 @@ from django.urls import path
 from classes.views import (
     KlassRegistrationListView,
     KlassScheduleListView,
+    RegistrationExerciseDetailView,
     RegistrationExerciseListView,
     RetrieveProfileView,
 )
@@ -26,5 +27,10 @@ urlpatterns = [
         "klass/registration/<int:pk>/exercises/",
         RegistrationExerciseListView.as_view(),
         name="klass-registration-exercises",
+    ),
+    path(
+        "klass/registration/<int:registration_pk>/exercises/<int:pk>/",
+        RegistrationExerciseDetailView.as_view(),
+        name="klass-registration-exercise-detail",
     ),
 ]

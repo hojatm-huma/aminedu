@@ -10,6 +10,7 @@ from classes.models import (
 )
 from classes.permissions import IsStudent
 from classes.serializers import (
+    ExerciseDetailSerializer,
     ExerciseSerializer,
     KlassRegistrationSerializer,
     KlassScheduleSerializer,
@@ -87,4 +88,31 @@ class RegistrationExerciseListView(generics.ListAPIView):
             pk=self.kwargs["pk"],
             student__user=self.request.user,
         )
-        return Exercise.objects.filter(klass=registration.klass).order_by("-due_date")
+        return Exercise.objects.filter(
+            klass=registration.klass
+        ).order_by("-due_date")
+
+
+class RegistrationExerciseDetailView(generics.RetrieveAPIView):
+    """Retrieve an exercise of a class the current student is registered in.
+
+    The registration and the exercise are both identified by id in the URL.
+    The registration must belong to the requesting student and the exercise
+    must belong to the registration's class.
+    """
+
+    serializer_class = ExerciseDetailSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get_object(self):
+        registration = get_object_or_404(
+            KlassRegistration,
+            pk=self.kwargs["registration_pk"],
+            student__user=self.request.user,
+        )
+        return get_object_or_404(
+            Exercise.objects.filter(klass=registration.klass).prefetch_related(
+                "files", "submissions", "comments__commenter"
+            ),
+            pk=self.kwargs["pk"],
+        )

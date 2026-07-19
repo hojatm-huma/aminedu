@@ -234,12 +234,16 @@ class ExerciseFile(BaseModel):
     exercise = models.ForeignKey(
         Exercise,
         on_delete=models.CASCADE,
+        related_name="files",
+        verbose_name=_("Exercise"),
     )
 
-    file = models.FileField()
+    file = models.FileField(
+        verbose_name=_("File"),
+    )
 
 
-class ExerciseSubmission(models.Model):
+class ExerciseSubmission(BaseModel):
     exercise = models.ForeignKey(
         Exercise,
         on_delete=models.CASCADE,
@@ -283,6 +287,28 @@ class ExerciseSubmission(models.Model):
 
 
 class ExerciseComment(BaseModel):
-    commenter = models.CharField(
-        "accounts.User",
+    exercise = models.ForeignKey(
+        Exercise,
+        on_delete=models.CASCADE,
+        related_name="comments",
+        verbose_name=_("Exercise"),
     )
+
+    commenter = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.CASCADE,
+        related_name="exercise_comments",
+        verbose_name=_("Commenter"),
+    )
+
+    comment = models.TextField(
+        verbose_name=_("Comment"),
+    )
+
+    class Meta:
+        verbose_name = _("Exercise Comment")
+        verbose_name_plural = _("Exercise Comments")
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"{self.commenter} → {self.exercise.title}"

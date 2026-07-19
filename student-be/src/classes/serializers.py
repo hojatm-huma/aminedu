@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from classes.models import (
     Exercise,
+    ExerciseComment,
+    ExerciseFile,
+    ExerciseSubmission,
     KlassRegistration,
     KlassSchedule,
     Student,
@@ -58,6 +61,53 @@ class ExerciseSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "due_date",
+        ]
+
+
+class ExerciseFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExerciseFile
+        fields = ["id", "file"]
+
+
+class ExerciseSubmissionSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    url = serializers.FileField(source="file", use_url=True, read_only=True)
+
+    class Meta:
+        model = ExerciseSubmission
+        fields = ["id", "name", "url", "created_at"]
+
+    def get_name(self, obj: ExerciseSubmission):
+        return obj.file.name.rsplit("/", 1)[-1]
+
+
+class ExerciseCommentSerializer(serializers.ModelSerializer):
+    commenter = serializers.CharField(
+        source="commenter.get_full_name",
+        read_only=True,
+    )
+
+    class Meta:
+        model = ExerciseComment
+        fields = ["id", "created_at", "comment", "commenter"]
+
+
+class ExerciseDetailSerializer(serializers.ModelSerializer):
+    files = ExerciseFileSerializer(many=True, read_only=True)
+    submissions = ExerciseSubmissionSerializer(many=True, read_only=True)
+    comments = ExerciseCommentSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Exercise
+        fields = [
+            "id",
+            "title",
+            "description",
+            "due_date",
+            "files",
+            "submissions",
+            "comments",
         ]
 
 
