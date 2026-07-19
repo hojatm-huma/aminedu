@@ -1,5 +1,6 @@
 from django.urls import path
 from classes.views import (
+    KlassRegistrationListView,
     KlassScheduleListView,
     RetrieveProfileView,
 )
@@ -14,5 +15,10 @@ urlpatterns = [
         "klass/schedule/",
         KlassScheduleListView.as_view(),
         name="klass-schedule",
+    ),
+    path(
+        "klass/registration/",
+        KlassRegistrationListView.as_view(),
+        name="klass-registration",
     ),
 ]

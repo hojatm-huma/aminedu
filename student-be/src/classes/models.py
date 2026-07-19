@@ -222,7 +222,7 @@ class Exercise(BaseModel):
     )
 
     def __str__(self):
-        return f"{self.lesson.name} — {self.title}"
+        return f"{self.klass.lesson.name} — {self.title}"
 
     class Meta:
         verbose_name = _("Exercise")

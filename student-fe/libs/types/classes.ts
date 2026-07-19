@@ -1,3 +1,11 @@
+export type KlassRegistration = {
+    id: number;
+    klass_id: number;
+    name: string;
+    teacher: string;
+    exercise_count: number;
+};
+
 export type KlassSchedule = {
     id: number;
     klass_id: number;

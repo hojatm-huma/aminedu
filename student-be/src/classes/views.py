@@ -1,11 +1,14 @@
+from django.db.models import Count
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from classes.models import (
+    KlassRegistration,
     KlassSchedule,
     Student,
 )
 from classes.permissions import IsStudent
 from classes.serializers import (
+    KlassRegistrationSerializer,
     KlassScheduleSerializer,
     RetrieveProfileSerializer,
 )
@@ -17,6 +20,29 @@ class RetrieveProfileView(generics.RetrieveAPIView):
 
     def get_object(self):
         return Student.objects.filter(user=self.request.user).first()
+
+
+class KlassRegistrationListView(generics.ListAPIView):
+    """List the classes the current student is registered in.
+
+    Each item includes the class name, the teacher's name and the
+    number of exercises defined for the class.
+    """
+
+    serializer_class = KlassRegistrationSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get_queryset(self):
+        return (
+            KlassRegistration.objects.filter(
+                student__user=self.request.user
+            )
+            .select_related(
+                "klass__lesson",
+                "klass__teacher__user",
+            )
+            .annotate(exercise_count=Count("klass__exercise"))
+        )
 
 
 class KlassScheduleListView(generics.ListAPIView):
