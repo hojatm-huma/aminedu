@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAccounts } from "@/lib/hooks/apis/accounts";
+import { useAccounts } from "@/libs/hooks/apis/accounts";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,9 +13,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
 
   const [error, setError] = useState<string | null>(null);
-
-  const VALID_USERNAME = "123456789";
-  const VALID_PASSWORD = "123456789";
 
   const REDIRECT_TO = "/Dashboard";
 
@@ -36,24 +33,10 @@ export default function LoginPage() {
     }
 
     const response = await getToken(u, p);
-    console.log(response);
-
-    // let role = "";
-    // let displayName = "";
-    // if (u === "123456789" && p === "123456789") {
-    //   role = "student";
-    //   displayName = "علی رضایی";
-    // } else if (u === "987654321" && p === "987654321") {
-    //   role = "teacher";
-    //   displayName = "استاد احمدی";
-    // } else {
-    //   setError("نام کاربری یا رمزعبور اشتباه است.");
-    //   return;
-    // }
+    localStorage.setItem("access_token", response.data.access);
+    localStorage.setItem("refresh_token", response.data.refresh);
 
     setError(null);
-    // localStorage.setItem("username", displayName);
-    // localStorage.setItem("role", role);
     router.push(REDIRECT_TO);
   };
 

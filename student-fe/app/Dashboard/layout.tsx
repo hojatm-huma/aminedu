@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useStudents } from "@/libs/hooks/apis/students";
 
 type SubTab = { label: string; route: string };
 type NavItem = { label: string; key: string; route: string; subtabs: SubTab[] };
@@ -177,6 +178,7 @@ function ProfileAvatar({ name, onClick }: { name: string; onClick: (e: React.Mou
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { getProfile } = useStudents();
 
   const [displayName, setDisplayName]             = useState("کاربر");
   const [sidebarOpen, setSidebarOpen]             = useState(false);
@@ -186,8 +188,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [openMsgModal, setOpenMsgModal]           = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("username");
-    if (saved) setDisplayName(saved);
+    let active = true;
+    getProfile()
+      .then((res) => {
+        if (!active) return;
+        const { first_name, last_name } = res.data;
+        const fullName = `${first_name ?? ""} ${last_name ?? ""}`.trim();
+        if (fullName) setDisplayName(fullName);
+      })
+      .catch(() => {
+        const saved = localStorage.getItem("username");
+        if (active && saved) setDisplayName(saved);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => { setSidebarOpen(false); }, [pathname]);
