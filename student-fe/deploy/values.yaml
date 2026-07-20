@@ -14,7 +14,7 @@ image:
   tag: "latest"
 
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-imagePullSecrets: 
+imagePullSecrets:
   - name: regcred
 # This is to override the chart name.
 nameOverride: ""
@@ -113,12 +113,10 @@ httpRoute:
   #       value: v2
 
 resources:
-  limits:
-    cpu: 250m
-    memory: 512Mi
+  limits: {}
   requests:
+    memory: 500Mi
     cpu: 250m
-    memory: 512Mi
 
 # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe: {}
