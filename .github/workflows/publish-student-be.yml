@@ -1,4 +1,4 @@
-name: Build and Push studentbe
+name: Build, push and deploy student backend
 
 on:
   workflow_dispatch:
@@ -26,3 +26,18 @@ jobs:
 
       - name: push image
         run: docker push ghcr.io/hojatm-huma/student-be:${GITHUB_SHA::7}
+
+      - name: setup helm
+        uses: azure/setup-helm@v5
+
+      - name: setup kubeconfig
+        run: |
+          mkdir -p ./kube
+          echo "${{ secrets.ARVAN_CLOUD_KUBECONFIG }}" | base64 --decode > ./kube/config
+
+      - name: deploy
+        run: |
+          helm upgrade --install student-be ./helmchart \
+            --kubeconfig ./kube/config \
+            --values student-be/deploy/values.yaml \
+            --set image.tag=${GITHUB_SHA::7}
