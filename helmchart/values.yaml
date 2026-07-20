@@ -160,10 +160,11 @@ tolerations: []
 
 affinity: {}
 
-envFrom:
-  - configMapRef:
-      name: hi
-configmaps:
-  - name: hi
-    data:
-      key: value
+envFrom: {}
+  # - configMapRef:
+  #     name: hi
+
+configmaps: {}
+  # - name: hi
+  #   data:
+  #     key: value

@@ -162,7 +162,7 @@ envFrom:
 configmaps:
   - name: student-be
     data:
-      DEBUG: True
+      DEBUG: "True"
       SECRET: hello
       CORS_ALLOWED_ORIGINS: https://test.aminedu.ir
       CSRF_TRUSTED_ORIGINS: https://test.aminedu.ir
