@@ -42,3 +42,4 @@ tsconfig.tsbuildinfo
 knip.jsonc
 
 *.sqlite3
+student-be/src/media/

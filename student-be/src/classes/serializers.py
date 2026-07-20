@@ -82,6 +82,13 @@ class ExerciseSubmissionSerializer(serializers.ModelSerializer):
         return obj.file.name.rsplit("/", 1)[-1]
 
 
+class ExerciseSubmissionCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExerciseSubmission
+        fields = ["id", "file", "created_at"]
+        read_only_fields = ["id", "created_at"]
+
+
 class ExerciseCommentSerializer(serializers.ModelSerializer):
     commenter = serializers.CharField(
         source="commenter.get_full_name",

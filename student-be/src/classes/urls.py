@@ -1,5 +1,6 @@
 from django.urls import path
 from classes.views import (
+    ExerciseSubmissionCreateView,
     KlassRegistrationListView,
     KlassScheduleListView,
     RegistrationExerciseDetailView,
@@ -32,5 +33,10 @@ urlpatterns = [
         "klass/registration/<int:registration_pk>/exercises/<int:pk>/",
         RegistrationExerciseDetailView.as_view(),
         name="klass-registration-exercise-detail",
+    ),
+    path(
+        "klass/registration/<int:registration_pk>/exercises/<int:pk>/submissions/",
+        ExerciseSubmissionCreateView.as_view(),
+        name="klass-registration-exercise-submissions",
     ),
 ]

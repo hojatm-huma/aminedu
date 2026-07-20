@@ -12,6 +12,7 @@ from classes.permissions import IsStudent
 from classes.serializers import (
     ExerciseDetailSerializer,
     ExerciseSerializer,
+    ExerciseSubmissionCreateSerializer,
     KlassRegistrationSerializer,
     KlassScheduleSerializer,
     RetrieveProfileSerializer,
@@ -115,4 +116,33 @@ class RegistrationExerciseDetailView(generics.RetrieveAPIView):
                 "files", "submissions", "comments__commenter"
             ),
             pk=self.kwargs["pk"],
+        )
+
+
+class ExerciseSubmissionCreateView(generics.CreateAPIView):
+    """Submit the current student's work for an exercise.
+
+    The registration and the exercise are both identified by id in the URL.
+    The registration must belong to the requesting student and the exercise
+    must belong to the registration's class.
+    """
+
+    serializer_class = ExerciseSubmissionCreateSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get_exercise(self):
+        registration = get_object_or_404(
+            KlassRegistration,
+            pk=self.kwargs["registration_pk"],
+            student__user=self.request.user,
+        )
+        return get_object_or_404(
+            Exercise.objects.filter(klass=registration.klass),
+            pk=self.kwargs["pk"],
+        )
+
+    def perform_create(self, serializer):
+        serializer.save(
+            exercise=self.get_exercise(),
+            student=self.request.user.student_profile,
         )
