@@ -38,5 +38,6 @@ jobs:
       - name: deploy
         run: |
           helm upgrade --install student-be ./helmchart \
+            --kubeconfig ./kube/config \
             --values student-be/deploy/values.yaml \
             --set image.tag=${GITHUB_SHA::7}
