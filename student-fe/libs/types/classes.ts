@@ -37,6 +37,12 @@ export type ExerciseCommentItem = {
     commenter: string;
 };
 
+export type ExerciseCommentCreateResponse = {
+    id: number;
+    comment: string;
+    created_at: string;
+};
+
 export type ExerciseDetail = {
     id: number;
     title: string;

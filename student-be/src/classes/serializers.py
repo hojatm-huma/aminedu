@@ -100,6 +100,13 @@ class ExerciseCommentSerializer(serializers.ModelSerializer):
         fields = ["id", "created_at", "comment", "commenter"]
 
 
+class ExerciseCommentCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExerciseComment
+        fields = ["id", "comment", "created_at"]
+        read_only_fields = ["id", "created_at"]
+
+
 class ExerciseDetailSerializer(serializers.ModelSerializer):
     files = ExerciseFileSerializer(many=True, read_only=True)
     submissions = ExerciseSubmissionSerializer(many=True, read_only=True)

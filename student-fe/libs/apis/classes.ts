@@ -1,5 +1,6 @@
 import {
     Exercise,
+    ExerciseCommentCreateResponse,
     ExerciseDetail,
     ExerciseSubmissionCreateResponse,
     KlassRegistration,
@@ -38,4 +39,9 @@ export const classApi = {
             { headers: { "Content-Type": "multipart/form-data" } },
         );
     },
+    createExerciseComment: (registrationId: number, exerciseId: number, comment: string) =>
+        apiClient.post<ExerciseCommentCreateResponse>(
+            `/classes/klass/registration/${registrationId}/exercises/${exerciseId}/comments/`,
+            { comment },
+        ),
 };

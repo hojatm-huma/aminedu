@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useClasses } from "@/libs/hooks/apis/classes";
+import { useStudents } from "@/libs/hooks/apis/students";
 import { ExerciseDetail } from "@/libs/types/classes";
 import { UploadSection, CommentsSection } from "../components";
 import { Comment } from "../data";
@@ -33,11 +34,14 @@ export default function TamrinDetailPage() {
   const exerciseId = Number(params.id);
   const registrationId = Number(searchParams.get("registrationId"));
 
-  const { getRegistrationExerciseDetail, createExerciseSubmission } = useClasses();
+  const { getRegistrationExerciseDetail, createExerciseSubmission, createExerciseComment } =
+    useClasses();
+  const { getProfile } = useStudents();
 
   const [exercise, setExercise] = useState<ExerciseDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [studentName, setStudentName] = useState("");
 
   const [submission, setSubmission] = useState<
     { fileName: string; submittedAt: string; url?: string } | undefined
@@ -54,9 +58,16 @@ export default function TamrinDetailPage() {
     setLoading(true);
     setError(false);
 
-    getRegistrationExerciseDetail(registrationId, exerciseId)
-      .then((res) => {
+    Promise.all([
+      getRegistrationExerciseDetail(registrationId, exerciseId),
+      getProfile().catch(() => null),
+    ])
+      .then(([res, profileRes]) => {
         const data = res.data;
+        const fullName = profileRes
+          ? `${profileRes.data.first_name ?? ""} ${profileRes.data.last_name ?? ""}`.trim()
+          : "";
+        setStudentName(fullName);
         setExercise(data);
 
         const lastSubmission = data.submissions[data.submissions.length - 1];
@@ -76,13 +87,13 @@ export default function TamrinDetailPage() {
             author: c.commenter,
             text: c.comment,
             date: faDate(c.created_at),
-            isOwn: false,
+            isOwn: fullName ? c.commenter === fullName : false,
           })),
         );
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, [registrationId, exerciseId, getRegistrationExerciseDetail]);
+  }, [registrationId, exerciseId, getRegistrationExerciseDetail, getProfile]);
 
   const handleUpload = async (file: File) => {
     const res = await createExerciseSubmission(registrationId, exerciseId, file);
@@ -93,10 +104,17 @@ export default function TamrinDetailPage() {
     });
   };
 
-  const handleComment = (text: string) => {
+  const handleComment = async (text: string) => {
+    const res = await createExerciseComment(registrationId, exerciseId, text);
     setComments((prev) => [
       ...prev,
-      { id: Date.now(), author: "من", text, date: faDate(new Date().toISOString()), isOwn: true },
+      {
+        id: res.data.id,
+        author: studentName || "من",
+        text: res.data.comment,
+        date: faDate(res.data.created_at),
+        isOwn: true,
+      },
     ]);
   };
 

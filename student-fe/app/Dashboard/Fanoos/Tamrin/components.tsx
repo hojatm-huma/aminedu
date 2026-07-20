@@ -137,19 +137,24 @@ export function CommentsSection({
   onAdd,
 }: {
   comments: Comment[];
-  onAdd: (text: string) => void;
+  onAdd: (text: string) => Promise<void>;
 }) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState(false);
 
-  const send = () => {
+  const send = async () => {
     if (!text.trim()) return;
     setSending(true);
-    setTimeout(() => {
-      onAdd(text.trim());
+    setError(false);
+    try {
+      await onAdd(text.trim());
       setText("");
+    } catch {
+      setError(true);
+    } finally {
       setSending(false);
-    }, 600);
+    }
   };
 
   return (
@@ -230,6 +235,11 @@ export function CommentsSection({
           )}
         </button>
       </div>
+      {error && (
+        <p className="text-[12px] text-red-500">
+          خطا در ارسال کامنت. دوباره تلاش کنید.
+        </p>
+      )}
     </div>
   );
 }
