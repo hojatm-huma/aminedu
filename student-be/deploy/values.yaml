@@ -154,3 +154,15 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+envFrom:
+  - configMapRef:
+      name: student-be
+
+configmaps:
+  - name: student-be
+    data:
+      DEBUG: True
+      SECRET: hello
+      CORS_ALLOWED_ORIGINS: https://test.aminedu.ir
+      CSRF_TRUSTED_ORIGINS: https://test.aminedu.ir
