@@ -38,6 +38,6 @@ jobs:
 
       - name: deploy
         run: |
-          helm upgrade install student-fe ./helmchart \
+          helm upgrade --install student-fe ./helmchart \
             --values student-fe/deploy/values.yaml \
             --set image.tag=${GITHUB_SHA::7}
