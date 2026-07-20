@@ -1,38 +1,43 @@
-name: build and deploy studentfe
+name: Build, push and deploy student frontend
 
 on:
-  push:
-    branches: ["main"]
+  workflow_dispatch:
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: login to ghcr
+        uses: docker/login-action@v3
         with:
-          node-version: "20"
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install dependencies
-        uses: borales/actions-yarn@v4
-        with:
-          dir: student-fe
-          cmd: install
+      - name: build image
+        working-directory: student-fe
+        run: docker build -f Dockerfile . -t ghcr.io/hojatm-huma/student-fe:${GITHUB_SHA::7}
 
-      - name: Build the application
-        uses: borales/actions-yarn@v4
-        with:
-          dir: student-fe
-          cmd: build
+      - name: push image
+        run: docker push ghcr.io/hojatm-huma/student-fe:${GITHUB_SHA::7}
 
-      - name: Configure s3cmd
+      - name: setup helm
+        uses: azure/setup-helm@v5
+
+      
+      - name: setup kubeconfig
         run: |
-          echo ${{ secrets.S3CMD_CONFIG }} | base64 -d > ~/.s3cfg
-      - name: Install s3cmd
-        run: sudo apt-get install -y s3cmd
-      - name: Upload to S3
+          mkdir -p ./kube
+          echo "${{ secrets.ARVAN_CLOUD_KUBECONFIG }}" | base64 --decode > ./kube/config
+
+      - name: deploy
         run: |
-          s3cmd sync --recursive --acl-public --no-mime-magic --guess-mime-type --delete-removed student-fe/out/ s3://student-fe
+          helm upgrade install student-fe ./helmchart \
+            --values student-fe/deploy/values.yaml \
+            --set image.tag=${GITHUB_SHA::7}
