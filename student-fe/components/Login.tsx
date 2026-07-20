@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAccounts } from "@/libs/hooks/apis/accounts";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,18 +14,15 @@ export default function LoginPage() {
 
   const [error, setError] = useState<string | null>(null);
 
-
-  const VALID_USERNAME = "123456789";
-  const VALID_PASSWORD = "123456789";
-
   const REDIRECT_TO = "/Dashboard";
 
-  const handleLogin = () => {
+  const { getToken } = useAccounts();
+  const handleLogin = async () => {
     const u = username.trim();
     const p = password.trim();
 
-    if(!u || !p){ 
-      if(!u && !p){
+    if (!u || !p) {
+      if (!u && !p) {
         setError("لطفا نام کاربری و رمز عبور را وارد کنید.");
       } else if (!u) {
         setError("لطفاً نام کاربری را وارد کنید.");
@@ -34,22 +32,11 @@ export default function LoginPage() {
       return;
     }
 
-    let role = "";
-    let displayName = "";
-    if (u === "123456789" && p === "123456789") {
-      role = "student";
-      displayName = "علی رضایی";
-    } else if (u === "987654321" && p === "987654321") {
-      role = "teacher";
-      displayName = "استاد احمدی";
-    } else {
-      setError("نام کاربری یا رمزعبور اشتباه است.");
-      return;
-    }
+    const response = await getToken(u, p);
+    localStorage.setItem("access_token", response.data.access);
+    localStorage.setItem("refresh_token", response.data.refresh);
 
     setError(null);
-    localStorage.setItem("username", displayName);
-    localStorage.setItem("role", role);
     router.push(REDIRECT_TO);
   };
 
@@ -80,7 +67,9 @@ export default function LoginPage() {
         >
           <div className="flex flex-row-reverse items-center gap-4 justify-center max-[480px]:hidden">
             <img src="/LOGO.png" alt="" className="h-10 w-auto" />
-            <h3 className="text-[26px] font-bold text-[#000000]">پلتفرم امین</h3>
+            <h3 className="text-[26px] font-bold text-[#000000]">
+              پلتفرم امین
+            </h3>
           </div>
 
           <h1
@@ -115,19 +104,18 @@ export default function LoginPage() {
                 نام کاربری
               </label>
               <input
-  value={username}
-  onChange={(e) => {
-    const onlyNumbers = e.target.value.replace(/[^0-9]/g, "");
-    setUsername(onlyNumbers);
-    if (error) setError(null);
-  }}
-  type="text"
-  inputMode="numeric"
-  pattern="[0-9]*"
-  placeholder="نام کاربری خود را وارد کنید."
-  className="w-full text-[#808080] rounded-[8px] border border-[#DADADA] px-4 py-3 text-[14px] outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-/>
-
+                value={username}
+                onChange={(e) => {
+                  const onlyNumbers = e.target.value.replace(/[^0-9]/g, "");
+                  setUsername(onlyNumbers);
+                  if (error) setError(null);
+                }}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="نام کاربری خود را وارد کنید."
+                className="w-full text-[#808080] rounded-[8px] border border-[#DADADA] px-4 py-3 text-[14px] outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+              />
             </div>
 
             <div className="space-y-2">
@@ -136,20 +124,19 @@ export default function LoginPage() {
               </label>
 
               <div className="relative">
-              <input
-  value={password}
-  onChange={(e) => {
-    const onlyNumbers = e.target.value.replace(/[^0-9]/g, "");
-    setPassword(onlyNumbers);
-    if (error) setError(null);
-  }}
-  type={showPass ? "text" : "password"}
-  inputMode="numeric"
-  pattern="[0-9]*"
-  placeholder="رمز عبور خود را وارد کنید."
-  className="w-full text-[#808080] rounded-[8px] border border-[#DADADA] px-4 py-3 text-[14px] outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-/>
-
+                <input
+                  value={password}
+                  onChange={(e) => {
+                    const onlyNumbers = e.target.value.replace(/[^0-9]/g, "");
+                    setPassword(onlyNumbers);
+                    if (error) setError(null);
+                  }}
+                  type={showPass ? "text" : "password"}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="رمز عبور خود را وارد کنید."
+                  className="w-full text-[#808080] rounded-[8px] border border-[#DADADA] px-4 py-3 text-[14px] outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                />
 
                 <button
                   type="button"
@@ -232,7 +219,10 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div dir="ltr" className="hidden max-[480px]:flex mt-10 justify-center">
+          <div
+            dir="ltr"
+            className="hidden max-[480px]:flex mt-10 justify-center"
+          >
             <div className="flex items-center gap-3">
               <img src="/LOGO.png" alt="" className="h-10 w-auto" />
               <span className="text-[26px] font-bold text-[#000000]">

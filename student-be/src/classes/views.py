@@ -1,48 +1,23 @@
-from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
-
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
 from classes.models import (
-    Student, Teacher, WeeklySchedule,
-    Exercise, ExerciseSubmission,
-    Handout, CounselingSession, CounselingRegistration,
-    Exam, ExamResult,
+    Exercise,
+    KlassRegistration,
+    KlassSchedule,
+    Student,
 )
-from classes.permissions import IsTeacher, IsStudent
+from classes.permissions import IsStudent
 from classes.serializers import (
-    RetrieveWeeklyScheduleSerializer,
-    RetrieveProfileSerializer,
-    # Student
+    ExerciseCommentCreateSerializer,
+    ExerciseDetailSerializer,
     ExerciseSerializer,
-    ExerciseSubmissionSerializer,
-    HandoutSerializer,
-    CounselingSessionSerializer,
-    ExamSerializer,
-    # Teacher create/manage
-    ExerciseCreateSerializer,
-    ExerciseSubmissionDetailSerializer,
-    HandoutCreateSerializer,
-    CounselingSessionCreateSerializer,
-    CounselingRegistrationSerializer,
-    ExamCreateSerializer,
-    ExamResultSerializer,
+    ExerciseSubmissionCreateSerializer,
+    KlassRegistrationSerializer,
+    KlassScheduleSerializer,
+    RetrieveProfileSerializer,
 )
-
-
-# ════════════════════════════════════════════════════════════════
-#  SHARED / STUDENT VIEWS
-# ════════════════════════════════════════════════════════════════
-
-class RetrieveWeeklyScheduleView(generics.ListAPIView):
-    serializer_class = RetrieveWeeklyScheduleSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return WeeklySchedule.objects.filter(
-            students__user=self.request.user,
-        ).order_by("classes__day_of_week", "classes__starts_at")
 
 
 class RetrieveProfileView(generics.RetrieveAPIView):
@@ -53,285 +28,151 @@ class RetrieveProfileView(generics.RetrieveAPIView):
         return Student.objects.filter(user=self.request.user).first()
 
 
-# ── Me (role detection) ───────────────────────────────────────────────────────
+class KlassRegistrationListView(generics.ListAPIView):
+    """List the classes the current student is registered in.
 
-class MeView(APIView):
-    """Returns the current user's role and basic info."""
-    permission_classes = [IsAuthenticated]
+    Each item includes the class name, the teacher's name and the
+    number of exercises defined for the class.
+    """
 
-    def get(self, request):
-        user = request.user
-        role = "unknown"
-        name = f"{user.first_name} {user.last_name}".strip() or user.username
+    serializer_class = KlassRegistrationSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
 
-        if hasattr(user, "teacher_profile"):
-            role = "teacher"
-        elif hasattr(user, "student_profile"):
-            role = "student"
+    def get_queryset(self):
+        return (
+            KlassRegistration.objects.filter(student__user=self.request.user)
+            .select_related(
+                "klass__lesson",
+                "klass__teacher__user",
+            )
+            .annotate(exercise_count=Count("klass__exercise"))
+        )
 
-        return Response({"role": role, "name": name, "username": user.username})
+
+class KlassScheduleListView(generics.ListAPIView):
+    """List the schedules of the classes the current student is registered in.
+
+    Optionally filtered by ``day_of_week`` and always ordered by ``starts_at``.
+    """
+
+    serializer_class = KlassScheduleSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get_queryset(self):
+        queryset = (
+            KlassSchedule.objects.filter(
+                klass__registrations__student__user=self.request.user
+            )
+            .select_related("klass__lesson", "klass__teacher__user")
+            .order_by("starts_at")
+        )
+
+        day_of_week = self.request.query_params.get("day_of_week")
+        if day_of_week:
+            queryset = queryset.filter(day_of_week=day_of_week)
+
+        return queryset
 
 
-# ── Student: Exercises ────────────────────────────────────────────────────────
+class RegistrationExerciseListView(generics.ListAPIView):
+    """List the exercises of a class the current student is registered in.
 
-class ListExercisesView(generics.ListAPIView):
+    The registration is identified by its id in the URL and must belong to
+    the requesting student. Exercises are ordered by ``due_date``.
+    """
+
     serializer_class = ExerciseSerializer
-    permission_classes = [IsStudent]
+    permission_classes = [IsAuthenticated, IsStudent]
 
     def get_queryset(self):
-        student = self.request.user.student_profile
-        lesson_ids = (
-            WeeklySchedule.objects.filter(students=student)
-            .values_list("classes__lesson_id", flat=True)
-            .distinct()
+        registration = get_object_or_404(
+            KlassRegistration,
+            pk=self.kwargs["pk"],
+            student__user=self.request.user,
         )
-        return Exercise.objects.filter(lesson_id__in=lesson_ids).select_related(
-            "lesson", "created_by", "created_by__user"
+        return Exercise.objects.filter(
+            klass=registration.klass
+        ).order_by("-due_date")
+
+
+class RegistrationExerciseDetailView(generics.RetrieveAPIView):
+    """Retrieve an exercise of a class the current student is registered in.
+
+    The registration and the exercise are both identified by id in the URL.
+    The registration must belong to the requesting student and the exercise
+    must belong to the registration's class.
+    """
+
+    serializer_class = ExerciseDetailSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get_object(self):
+        registration = get_object_or_404(
+            KlassRegistration,
+            pk=self.kwargs["registration_pk"],
+            student__user=self.request.user,
         )
-
-
-class SubmitExerciseView(generics.CreateAPIView):
-    serializer_class = ExerciseSubmissionSerializer
-    permission_classes = [IsStudent]
-
-    def create(self, request, *args, **kwargs):
-        exercise = get_object_or_404(Exercise, pk=self.kwargs["exercise_id"])
-        student = request.user.student_profile
-
-        submission, created = ExerciseSubmission.objects.get_or_create(
-            exercise=exercise,
-            student=student,
-            defaults={"file": request.FILES.get("file")},
-        )
-        if not created:
-            submission.file = request.FILES.get("file")
-            submission.save()
-
-        serializer = ExerciseSubmissionSerializer(submission, context={"request": request})
-        return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
-
-
-# ── Student: Handouts ─────────────────────────────────────────────────────────
-
-class ListHandoutsView(generics.ListAPIView):
-    serializer_class = HandoutSerializer
-    permission_classes = [IsStudent]
-
-    def get_queryset(self):
-        student = self.request.user.student_profile
-        lesson_ids = (
-            WeeklySchedule.objects.filter(students=student)
-            .values_list("classes__lesson_id", flat=True)
-            .distinct()
-        )
-        return Handout.objects.filter(lesson_id__in=lesson_ids).select_related(
-            "lesson", "uploaded_by", "uploaded_by__user"
+        return get_object_or_404(
+            Exercise.objects.filter(klass=registration.klass).prefetch_related(
+                "files", "submissions", "comments__commenter"
+            ),
+            pk=self.kwargs["pk"],
         )
 
 
-# ── Student: Counseling Sessions ──────────────────────────────────────────────
+class ExerciseSubmissionCreateView(generics.CreateAPIView):
+    """Submit the current student's work for an exercise.
 
-class ListCounselingSessionsView(generics.ListAPIView):
-    serializer_class = CounselingSessionSerializer
-    permission_classes = [IsStudent]
+    The registration and the exercise are both identified by id in the URL.
+    The registration must belong to the requesting student and the exercise
+    must belong to the registration's class.
+    """
 
-    def get_queryset(self):
-        from django.utils import timezone
-        return CounselingSession.objects.filter(
-            session_date__gte=timezone.now().date()
-        ).annotate_registered() if hasattr(CounselingSession.objects, "annotate_registered") \
-            else CounselingSession.objects.filter(
-                session_date__gte=timezone.now().date()
-            ).prefetch_related("registrations")
+    serializer_class = ExerciseSubmissionCreateSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
 
-
-class RegisterCounselingView(APIView):
-    """Student registers (or cancels) a counseling session."""
-    permission_classes = [IsStudent]
-
-    def post(self, request, session_id):
-        session = get_object_or_404(CounselingSession, pk=session_id)
-        student = request.user.student_profile
-
-        if session.is_cancelled:
-            return Response({"detail": "Session is cancelled."}, status=status.HTTP_400_BAD_REQUEST)
-        if session.registered_count >= session.capacity:
-            return Response({"detail": "Session is full."}, status=status.HTTP_400_BAD_REQUEST)
-
-        reg, created = CounselingRegistration.objects.get_or_create(session=session, student=student)
-        if not created:
-            return Response({"detail": "Already registered."}, status=status.HTTP_200_OK)
-        return Response({"detail": "Registered successfully."}, status=status.HTTP_201_CREATED)
-
-    def delete(self, request, session_id):
-        session = get_object_or_404(CounselingSession, pk=session_id)
-        student = request.user.student_profile
-        CounselingRegistration.objects.filter(session=session, student=student).delete()
-        return Response({"detail": "Registration cancelled."}, status=status.HTTP_204_NO_CONTENT)
-
-
-# ── Student: Exams ────────────────────────────────────────────────────────────
-
-class ListExamsView(generics.ListAPIView):
-    serializer_class = ExamSerializer
-    permission_classes = [IsStudent]
-
-    def get_queryset(self):
-        student = self.request.user.student_profile
-        lesson_ids = (
-            WeeklySchedule.objects.filter(students=student)
-            .values_list("classes__lesson_id", flat=True)
-            .distinct()
+    def get_exercise(self):
+        registration = get_object_or_404(
+            KlassRegistration,
+            pk=self.kwargs["registration_pk"],
+            student__user=self.request.user,
         )
-        return Exam.objects.filter(lesson_id__in=lesson_ids).select_related(
-            "lesson", "created_by", "created_by__user"
-        ).prefetch_related("results")
-
-
-# ════════════════════════════════════════════════════════════════
-#  TEACHER VIEWS
-# ════════════════════════════════════════════════════════════════
-
-# ── Teacher: Exercises ────────────────────────────────────────────────────────
-
-class TeacherExerciseListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsTeacher]
-
-    def get_serializer_class(self):
-        return ExerciseCreateSerializer if self.request.method == "POST" else ExerciseSerializer
-
-    def get_queryset(self):
-        teacher = self.request.user.teacher_profile
-        return Exercise.objects.filter(created_by=teacher).select_related("lesson")
+        return get_object_or_404(
+            Exercise.objects.filter(klass=registration.klass),
+            pk=self.kwargs["pk"],
+        )
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user.teacher_profile)
-
-
-class TeacherExerciseDetailView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = ExerciseCreateSerializer
-    permission_classes = [IsTeacher]
-
-    def get_queryset(self):
-        return Exercise.objects.filter(created_by=self.request.user.teacher_profile)
-
-
-class TeacherExerciseSubmissionsView(generics.ListAPIView):
-    """Teacher views all student submissions for a specific exercise."""
-    serializer_class = ExerciseSubmissionDetailSerializer
-    permission_classes = [IsTeacher]
-
-    def get_queryset(self):
-        exercise = get_object_or_404(
-            Exercise,
-            pk=self.kwargs["exercise_id"],
-            created_by=self.request.user.teacher_profile,
+        serializer.save(
+            exercise=self.get_exercise(),
+            student=self.request.user.student_profile,
         )
-        return exercise.submissions.select_related("student", "student__user")
 
 
-# ── Teacher: Handouts ─────────────────────────────────────────────────────────
+class ExerciseCommentCreateView(generics.CreateAPIView):
+    """Create a comment on an exercise.
 
-class TeacherHandoutListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsTeacher]
+    The registration and the exercise are both identified by id in the URL.
+    The registration must belong to the requesting student and the exercise
+    must belong to the registration's class.
+    """
 
-    def get_serializer_class(self):
-        return HandoutCreateSerializer if self.request.method == "POST" else HandoutSerializer
+    serializer_class = ExerciseCommentCreateSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
 
-    def get_queryset(self):
-        return Handout.objects.filter(uploaded_by=self.request.user.teacher_profile)
+    def get_exercise(self):
+        registration = get_object_or_404(
+            KlassRegistration,
+            pk=self.kwargs["registration_pk"],
+            student__user=self.request.user,
+        )
+        return get_object_or_404(
+            Exercise.objects.filter(klass=registration.klass),
+            pk=self.kwargs["pk"],
+        )
 
     def perform_create(self, serializer):
-        serializer.save(uploaded_by=self.request.user.teacher_profile)
-
-
-class TeacherHandoutDetailView(generics.RetrieveDestroyAPIView):
-    serializer_class = HandoutSerializer
-    permission_classes = [IsTeacher]
-
-    def get_queryset(self):
-        return Handout.objects.filter(uploaded_by=self.request.user.teacher_profile)
-
-
-# ── Teacher: Counseling Sessions ──────────────────────────────────────────────
-
-class TeacherCounselingListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsTeacher]
-
-    def get_serializer_class(self):
-        return CounselingSessionCreateSerializer if self.request.method == "POST" else CounselingSessionSerializer
-
-    def get_queryset(self):
-        return CounselingSession.objects.filter(
-            counselor=self.request.user.teacher_profile
-        ).prefetch_related("registrations")
-
-    def perform_create(self, serializer):
-        serializer.save(counselor=self.request.user.teacher_profile)
-
-
-class TeacherCounselingDetailView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = CounselingSessionCreateSerializer
-    permission_classes = [IsTeacher]
-
-    def get_queryset(self):
-        return CounselingSession.objects.filter(counselor=self.request.user.teacher_profile)
-
-
-class TeacherCounselingRegistrationsView(generics.ListAPIView):
-    """Teacher sees who registered for a session."""
-    serializer_class = CounselingRegistrationSerializer
-    permission_classes = [IsTeacher]
-
-    def get_queryset(self):
-        session = get_object_or_404(
-            CounselingSession,
-            pk=self.kwargs["session_id"],
-            counselor=self.request.user.teacher_profile,
+        serializer.save(
+            exercise=self.get_exercise(),
+            commenter=self.request.user,
         )
-        return session.registrations.select_related("student", "student__user")
-
-
-# ── Teacher: Exams ────────────────────────────────────────────────────────────
-
-class TeacherExamListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsTeacher]
-
-    def get_serializer_class(self):
-        return ExamCreateSerializer if self.request.method == "POST" else ExamSerializer
-
-    def get_queryset(self):
-        return Exam.objects.filter(created_by=self.request.user.teacher_profile).select_related("lesson")
-
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user.teacher_profile)
-
-
-class TeacherExamDetailView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = ExamCreateSerializer
-    permission_classes = [IsTeacher]
-
-    def get_queryset(self):
-        return Exam.objects.filter(created_by=self.request.user.teacher_profile)
-
-
-class TeacherExamResultsView(generics.ListCreateAPIView):
-    """Teacher views or sets student results for an exam."""
-    serializer_class = ExamResultSerializer
-    permission_classes = [IsTeacher]
-
-    def get_queryset(self):
-        exam = get_object_or_404(
-            Exam,
-            pk=self.kwargs["exam_id"],
-            created_by=self.request.user.teacher_profile,
-        )
-        return exam.results.select_related("student", "student__user")
-
-    def perform_create(self, serializer):
-        exam = get_object_or_404(
-            Exam,
-            pk=self.kwargs["exam_id"],
-            created_by=self.request.user.teacher_profile,
-        )
-        serializer.save(exam=exam)

@@ -40,3 +40,6 @@ build
 tsconfig.tsbuildinfo
 .ncurc.js
 knip.jsonc
+
+*.sqlite3
+student-be/src/media/

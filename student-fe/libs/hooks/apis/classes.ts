@@ -1,0 +1,12 @@
+import { classApi } from "@/libs/apis/classes";
+
+export function useClasses() {
+    return {
+        getSchedule: classApi.getSchedule,
+        getRegistrations: classApi.getRegistrations,
+        getRegistrationExercises: classApi.getRegistrationExercises,
+        getRegistrationExerciseDetail: classApi.getRegistrationExerciseDetail,
+        createExerciseSubmission: classApi.createExerciseSubmission,
+        createExerciseComment: classApi.createExerciseComment,
+    };
+}
