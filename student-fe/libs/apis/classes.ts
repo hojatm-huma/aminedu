@@ -1,6 +1,7 @@
 import {
     Exercise,
     ExerciseDetail,
+    ExerciseSubmissionCreateResponse,
     KlassRegistration,
     KlassSchedule,
 } from "@/libs/types/classes";
@@ -28,4 +29,13 @@ export const classApi = {
         apiClient.get<ExerciseDetail>(
             `/classes/klass/registration/${registrationId}/exercises/${exerciseId}/`,
         ),
+    createExerciseSubmission: (registrationId: number, exerciseId: number, file: File) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        return apiClient.post<ExerciseSubmissionCreateResponse>(
+            `/classes/klass/registration/${registrationId}/exercises/${exerciseId}/submissions/`,
+            formData,
+            { headers: { "Content-Type": "multipart/form-data" } },
+        );
+    },
 };

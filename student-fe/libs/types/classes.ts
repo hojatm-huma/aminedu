@@ -24,6 +24,12 @@ export type ExerciseSubmissionItem = {
     created_at: string;
 };
 
+export type ExerciseSubmissionCreateResponse = {
+    id: number;
+    file: string;
+    created_at: string;
+};
+
 export type ExerciseCommentItem = {
     id: number;
     created_at: string;

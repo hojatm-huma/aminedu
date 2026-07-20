@@ -33,14 +33,14 @@ export default function TamrinDetailPage() {
   const exerciseId = Number(params.id);
   const registrationId = Number(searchParams.get("registrationId"));
 
-  const { getRegistrationExerciseDetail } = useClasses();
+  const { getRegistrationExerciseDetail, createExerciseSubmission } = useClasses();
 
   const [exercise, setExercise] = useState<ExerciseDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   const [submission, setSubmission] = useState<
-    { fileName: string; submittedAt: string } | undefined
+    { fileName: string; submittedAt: string; url?: string } | undefined
   >(undefined);
   const [comments, setComments] = useState<Comment[]>([]);
 
@@ -65,6 +65,7 @@ export default function TamrinDetailPage() {
             ? {
                 fileName: lastSubmission.name,
                 submittedAt: faDate(lastSubmission.created_at),
+                url: lastSubmission.url,
               }
             : undefined,
         );
@@ -83,8 +84,13 @@ export default function TamrinDetailPage() {
       .finally(() => setLoading(false));
   }, [registrationId, exerciseId, getRegistrationExerciseDetail]);
 
-  const handleUpload = (fileName: string) => {
-    setSubmission({ fileName, submittedAt: faDate(new Date().toISOString()) });
+  const handleUpload = async (file: File) => {
+    const res = await createExerciseSubmission(registrationId, exerciseId, file);
+    setSubmission({
+      fileName: fileNameFromUrl(res.data.file),
+      submittedAt: faDate(res.data.created_at),
+      url: res.data.file,
+    });
   };
 
   const handleComment = (text: string) => {
@@ -210,7 +216,7 @@ export default function TamrinDetailPage() {
             <div className="h-px bg-[#EEF0F4]" />
 
             {/* Upload answers */}
-            <UploadSection submission={submission} onUploaded={handleUpload} />
+            <UploadSection submission={submission} onUpload={handleUpload} />
 
             <div className="h-px bg-[#EEF0F4]" />
 

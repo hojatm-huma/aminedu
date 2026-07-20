@@ -6,22 +6,28 @@ import { Comment, faNum } from "./data";
 // ── Upload button (Client code used by Student) ───────────────────────────────
 export function UploadSection({
   submission,
-  onUploaded,
+  onUpload,
 }: {
-  submission?: { fileName: string; submittedAt: string };
-  onUploaded: (fileName: string) => void;
+  submission?: { fileName: string; submittedAt: string; url?: string };
+  onUpload: (file: File) => Promise<void>;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState(false);
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    setTimeout(() => {
+    setError(false);
+    try {
+      await onUpload(file);
+    } catch {
+      setError(true);
+    } finally {
       setUploading(false);
-      onUploaded(file.name);
-    }, 1200);
+      if (ref.current) ref.current.value = "";
+    }
   };
 
   return (
@@ -29,7 +35,12 @@ export function UploadSection({
       <p className="text-[12px] font-bold text-[#9DB3C9] mb-2">پاسخ تمرین</p>
       {submission ? (
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-[10px] px-3 py-2 text-[13px] text-emerald-700 font-semibold">
+          <a
+            href={submission.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-[10px] px-3 py-2 text-[13px] text-emerald-700 font-semibold hover:bg-emerald-100 transition"
+          >
             <svg
               width="14"
               height="14"
@@ -46,18 +57,20 @@ export function UploadSection({
             <span className="font-normal text-emerald-500 text-[11px]">
               · {submission.submittedAt}
             </span>
-          </div>
+          </a>
           <button
             onClick={() => ref.current?.click()}
-            className="text-[12px] text-[#9DB3C9] hover:text-[#3E66A8] underline transition cursor-pointer"
+            disabled={uploading}
+            className="text-[12px] text-[#9DB3C9] hover:text-[#3E66A8] underline transition cursor-pointer disabled:opacity-60"
           >
-            جایگزینی فایل
+            {uploading ? "در حال آپلود..." : "جایگزینی فایل"}
           </button>
           <input
             ref={ref}
             type="file"
             className="hidden"
             onChange={handleFile}
+            accept=".pdf,.doc,.docx,.jpg,.png,.zip"
           />
         </div>
       ) : (
@@ -108,6 +121,11 @@ export function UploadSection({
             )}
           </button>
         </>
+      )}
+      {error && (
+        <p className="text-[12px] text-red-500 mt-2">
+          خطا در آپلود فایل. دوباره تلاش کنید.
+        </p>
       )}
     </div>
   );

@@ -6,5 +6,6 @@ export function useClasses() {
         getRegistrations: classApi.getRegistrations,
         getRegistrationExercises: classApi.getRegistrationExercises,
         getRegistrationExerciseDetail: classApi.getRegistrationExerciseDetail,
+        createExerciseSubmission: classApi.createExerciseSubmission,
     };
 }
