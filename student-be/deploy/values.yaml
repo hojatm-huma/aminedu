@@ -158,11 +158,16 @@ affinity: {}
 envFrom:
   - configMapRef:
       name: student-be
+  - secretRef:
+      name: student-be
 
 configmaps:
   - name: student-be
     data:
       DEBUG: "True"
-      SECRET: hello
       ALLOWED_HOSTS: "*"
       ALLOWED_ORIGINS: "https://test.aminedu.ir"
+      DB_NAME: student_be
+      DB_USER: aminedu_app
+      DB_HOST: postgres.database
+      DB_PORT: "5432"
