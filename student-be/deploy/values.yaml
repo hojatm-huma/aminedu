@@ -165,8 +165,8 @@ configmaps:
   - name: student-be
     data:
       DEBUG: "True"
-      ALLOWED_HOSTS: "*"
-      ALLOWED_ORIGINS: "https://test.aminedu.ir"
+      ALLOWED_HOSTS: "test.aminedu.ir,api.test.aminedu.ir"
+      ALLOWED_ORIGINS: "https://test.aminedu.ir,https://api.test.aminedu.ir"
       DB_NAME: student_be
       DB_USER: aminedu_app
       DB_HOST: postgres.database
