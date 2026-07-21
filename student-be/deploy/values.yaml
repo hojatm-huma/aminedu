@@ -165,4 +165,4 @@ configmaps:
       DEBUG: "True"
       SECRET: hello
       ALLOWED_HOSTS: "*"
-      ALLOWED_ORIGINS: "*"
+      ALLOWED_ORIGINS: "https://test.aminedu.ir"
