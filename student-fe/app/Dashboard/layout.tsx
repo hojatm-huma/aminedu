@@ -6,9 +6,9 @@ import { useEffect, useState } from "react";
 import { useStudents } from "@/libs/hooks/apis/students";
 
 type SubTab = { label: string; route: string };
-type NavItem = { label: string; key: string; route: string; subtabs: SubTab[] };
+export type NavItem = { label: string; key: string; route: string; subtabs: SubTab[] };
 
-const NAV_ITEMS: NavItem[] = [
+export const NAV_ITEMS: NavItem[] = [
   {
     label: "فانوس",
     key: "Fanoos",
