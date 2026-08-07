@@ -90,6 +90,12 @@ export default function KelasPage() {
     .filter((c) => c.day_of_week === selectedDay)
     .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
 
+  const overviewClasses = [...classes].sort((a, b) =>
+    a.day_of_week !== b.day_of_week
+      ? a.day_of_week - b.day_of_week
+      : a.starts_at.localeCompare(b.starts_at)
+  );
+
   const faNum = (n: number | string) => new Intl.NumberFormat("fa-IR").format(Number(n) || 0);
 
   const handleAddClass = (e: React.FormEvent) => {
@@ -140,6 +146,55 @@ export default function KelasPage() {
           </button>
         )}
       </div>
+
+      {/* ── Full schedule overview ── */}
+      {classes.length > 0 && (
+        <div className="bg-white rounded-[16px] overflow-hidden shadow-sm">
+          <div className="px-5 pt-4 pb-3">
+            <h3 className="text-[15px] font-bold text-[#1A2B45]">برنامه کلی کلاس‌ها</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px] text-[13px]">
+              <thead>
+                <tr className="bg-[#EEF5FF] text-[#3E66A8]">
+                  <th className="py-2.5 px-4 text-center font-bold whitespace-nowrap">ردیف</th>
+                  <th className="py-2.5 px-4 text-right font-bold whitespace-nowrap">درس</th>
+                  <th className="py-2.5 px-4 text-right font-bold whitespace-nowrap">مدرس</th>
+                  <th className="py-2.5 px-4 text-right font-bold whitespace-nowrap">روز</th>
+                  <th className="py-2.5 px-4 text-right font-bold whitespace-nowrap">ساعت</th>
+                </tr>
+              </thead>
+              <tbody>
+                {overviewClasses.map((cls, idx) => {
+                  const isToday = cls.day_of_week === todayIdx;
+                  return (
+                    <tr
+                      key={cls.id}
+                      className={isToday ? "bg-[#F4F8FF]" : idx % 2 === 0 ? "bg-white" : "bg-[#FAFBFD]"}
+                    >
+                      <td className="py-3 px-4 text-center text-[#9DB3C9] font-semibold">{faNum(idx + 1)}</td>
+                      <td className="py-3 px-4 text-right font-bold text-[#1A2B45]">{cls.lesson}</td>
+                      <td className="py-3 px-4 text-right text-[#7A9BB5]">{cls.teacher}</td>
+                      <td className="py-3 px-4 text-right">
+                        <span
+                          className={`text-[12px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${
+                            isToday ? "bg-[#3E66A8] text-white" : "bg-[#EEF5FF] text-[#3E66A8]"
+                          }`}
+                        >
+                          {WEEK_NAMES[cls.day_of_week]}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right text-[#3E66A8] font-semibold whitespace-nowrap">
+                        {toHm(cls.starts_at)} - {toHm(cls.ends_at)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* ── Week navigation controller ── */}
       <div className="flex items-center justify-between bg-white rounded-[14px] border border-[#EEF0F4] p-3">
