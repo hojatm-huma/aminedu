@@ -1,8 +1,15 @@
-import Loginpage from "@/components/Login";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
 export default function Home() {
-  return (
-    <>
-    <Loginpage/>
-    </>
-  );
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    router.replace(token ? "/Dashboard" : "/Login");
+  }, [router]);
+
+  return null;
 }
