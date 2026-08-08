@@ -32,12 +32,23 @@ export default function LoginPage() {
       return;
     }
 
-    const response = await getToken(u, p);
-    localStorage.setItem("access_token", response.data.access);
-    localStorage.setItem("refresh_token", response.data.refresh);
+    try {
+      const response = await getToken(u, p);
 
-    setError(null);
-    router.push(REDIRECT_TO);
+      if (response.status === 200) {
+        localStorage.setItem("access_token", response.data.access);
+        localStorage.setItem("refresh_token", response.data.refresh);
+
+        setError(null);
+        router.push(REDIRECT_TO);
+      }
+    } catch (err: any) {
+      if (err?.response?.status === 401) {
+        setError("نام کاربری یا رمز عبور اشتباه است.");
+      } else {
+        throw err;
+      }
+    }
   };
 
   return (
