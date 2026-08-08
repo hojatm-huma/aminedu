@@ -113,7 +113,9 @@ httpRoute:
   #       value: v2
 
 resources:
-  limits: {}
+  limits:
+    memory: 500Mi
+    cpu: 250m
   requests:
     memory: 500Mi
     cpu: 250m
