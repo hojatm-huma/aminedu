@@ -168,3 +168,15 @@ configmaps: {}
   # - name: hi
   #   data:
   #     key: value
+
+# This is for creating PersistentVolumeClaims more information can be found here: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+persistence: []
+  # - name: data
+  #   accessModes:
+  #     - ReadWriteOnce
+  #   storageClassName: ""
+  #   size: 1Gi
+  #   annotations: {}
+  #   labels: {}
+  #   # selector: {}
+  #   # volumeName: ""
