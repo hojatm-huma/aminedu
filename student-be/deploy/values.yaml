@@ -1,3 +1,4 @@
+name: &name student-be
 # Default values for helmchart.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
@@ -139,17 +140,15 @@ autoscaling:
   # targetMemoryUtilizationPercentage: 80
 
 # Additional volumes on the output Deployment definition.
-volumes: []
-  # - name: foo
-  #   secret:
-  #     secretName: mysecret
-  #     optional: false
+volumes:
+  - name: *name
+    persistentVolumeClaim:
+      claimName: *name
 
 # Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
-  # - name: foo
-  #   mountPath: "/etc/foo"
-  #   readOnly: true
+volumeMounts:
+  - name: *name
+    mountPath: /data/
 
 nodeSelector: {}
 
@@ -173,3 +172,9 @@ configmaps:
       DB_USER: aminedu_app
       DB_HOST: postgres.database
       DB_PORT: "5432"
+
+persistence:
+  - name: *name
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
