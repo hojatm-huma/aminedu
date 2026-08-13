@@ -6,6 +6,12 @@ name: &name student-be
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1
 
+# Recreate (not RollingUpdate) is required here: the pod mounts a ReadWriteOnce PVC,
+# so a rolling update would try to attach the volume to a new pod before the old
+# one releases it, causing a "Multi-Attach error" deadlock.
+strategy:
+  type: Recreate
+
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
   repository: ghcr.io/hojatm-huma/student-be
@@ -115,11 +121,11 @@ httpRoute:
 
 resources:
   limits:
-    memory: 256Mi
-    cpu: 128m
+    memory: 512Mi
+    cpu: 256m
   requests:
-    memory: 256Mi
-    cpu: 128m
+    memory: 512Mi
+    cpu: 256m
 
 # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe: null
@@ -176,5 +182,5 @@ configmaps:
 persistence:
   - name: *name
     accessModes:
-      - ReadWriteMany
+      - ReadWriteOnce
     size: 10Gi
