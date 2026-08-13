@@ -176,5 +176,5 @@ configmaps:
 persistence:
   - name: *name
     accessModes:
-      - ReadWriteOnce
+      - ReadWriteMany
     size: 10Gi
