@@ -96,7 +96,6 @@ class Student(BaseModel):
 class Lesson(BaseModel):
     name = models.CharField(
         max_length=100,
-        unique=True,
         blank=False,
         null=False,
         verbose_name=_("Lesson Name"),
