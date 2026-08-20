@@ -28,7 +28,7 @@ MOUNTED_VOLUME_DIR = Path("/data/")
 SECRET_KEY = os.getenv("SECRET_KEY", "secret-key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", False)
+DEBUG = os.getenv("DEBUG", False) == "True"
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost").split(",")
 CORS_ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
