@@ -130,6 +130,11 @@ class Klass(BaseModel):
         verbose_name=_("Teacher"),
     )
 
+    url = models.URLField(
+        blank=True,
+        null=True,
+    )
+
     def __str__(self):
         return f"{self.id} - {self.lesson}"
 
