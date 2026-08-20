@@ -175,7 +175,7 @@ envFrom:
 configmaps:
   - name: student-be
     data:
-      DEBUG: "True"
+      DEBUG: "False"
       ALLOWED_HOSTS: "test.aminedu.ir,api.test.aminedu.ir"
       ALLOWED_ORIGINS: "https://test.aminedu.ir,https://api.test.aminedu.ir"
       DB_NAME: student_be
