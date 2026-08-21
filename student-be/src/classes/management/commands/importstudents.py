@@ -4,7 +4,7 @@ from accounts.models import User
 from django.core.management.base import BaseCommand
 
 from classes.choices import FieldOfStudy, Gender, Stage
-from classes.models import Student
+from classes.models import Klass, KlassRegistration, Student
 
 
 @dataclass
@@ -124,7 +124,7 @@ class Command(BaseCommand):
         )
         user_instance.set_password(user.phone_number)
         user_instance.save()
-        Student.objects.update_or_create(
+        student, _ = Student.objects.update_or_create(
             user=user_instance,
             defaults={
                 "national_code": user.national_code,
@@ -140,3 +140,13 @@ class Command(BaseCommand):
                 "postcode": user.postcode,
             },
         )
+
+        klasses = Klass.objects.filter(
+            lessons__field_of_study=user.field_of_study,
+            lesson__stage=user.stage,
+        )
+        for klass in klasses:
+            KlassRegistration.objects.get_or_create(
+                student=student,
+                klass=klass,
+            )
