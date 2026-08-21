@@ -38,14 +38,17 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         file_csv = options["file"]
 
-        users = self._read_file(file_csv)
+        users: list[UserData] = self._read_file(file_csv)
 
         for user in users:
-            print(f"Importing student: {user.username}")
-            self._create_user(
-                username=user.username,
-                user=user,
-            )
+            # print(f"Importing student: {user.username}")
+            # self._create_user(
+            #     username=user.username,
+            #     user=user,
+            # )
+
+            print("changing password for user: ", user.username)
+            self._set_password(user.username, user.phone_number)
 
     def _read_file(self, file):
         users = []
@@ -113,6 +116,15 @@ class Command(BaseCommand):
             "پسر": Gender.MALE,
             "دختر": Gender.FEMALE,
         }[gender]
+
+    def _set_password(self, username: str, phone_number: str):
+        phone_number_without_zero = phone_number
+        if phone_number[0] == "0":
+            phone_number_without_zero = phone_number[1:]
+
+        user = User.objects.get(username=username)
+        user.set_password(phone_number_without_zero)
+        user.save()
 
     def _create_user(self, username: str, user: UserData):
         user_instance, _ = User.objects.update_or_create(
