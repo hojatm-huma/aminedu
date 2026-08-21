@@ -51,7 +51,7 @@ class KlassScheduleInline(admin.TabularInline):
 
 @admin.register(Klass)
 class KlassAdmin(admin.ModelAdmin):
-    list_display = ("id", "lesson", "teacher", "created_at")
+    list_display = ("id", "lesson", "teacher", "lesson__stage", "created_at")
     list_filter = ("lesson__field_of_study", "lesson__stage")
     search_fields = ("lesson__name", "teacher__user__last_name")
     raw_id_fields = ("lesson", "teacher")
