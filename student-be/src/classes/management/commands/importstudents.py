@@ -142,7 +142,7 @@ class Command(BaseCommand):
         )
 
         klasses = Klass.objects.filter(
-            lessons__field_of_study=user.field_of_study,
+            lesson__field_of_study=user.field_of_study,
             lesson__stage=user.stage,
         )
         for klass in klasses:
