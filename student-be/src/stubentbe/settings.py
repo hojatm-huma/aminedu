@@ -81,10 +81,10 @@ TEMPLATES = [
 WSGI_APPLICATION = "stubentbe.wsgi.application"
 
 DB_DIR = BASE_DIR / "db.sqlite3"
-STATICFILES_DIRS = BASE_DIR / "statics"
+STATICFILES_DIRS = [BASE_DIR / "statics"]
 if DEBUG is False:
     DB_DIR = MOUNTED_VOLUME_DIR / "db.sqlite3"
-    STATICFILES_DIRS = MOUNTED_VOLUME_DIR / "statics"
+    STATICFILES_DIRS = [MOUNTED_VOLUME_DIR / "statics"]
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
