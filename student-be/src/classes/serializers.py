@@ -12,17 +12,31 @@ from classes.models import (
 
 
 class KlassScheduleSerializer(serializers.ModelSerializer):
-    klass_id = serializers.IntegerField(source="klass.id", read_only=True)
-    lesson = serializers.CharField(source="klass.lesson.name", read_only=True)
-    teacher = serializers.CharField(source="klass.teacher.full_name", read_only=True)
-    klass_url = serializers.CharField(source="klass.url")
+    klass_id = serializers.IntegerField(
+        source="klass.id",
+        read_only=True,
+    )
+    lesson = serializers.CharField(
+        source="klass.lesson.name",
+        read_only=True,
+    )
+    teacher = serializers.CharField(
+        source="klass.teacher.full_name",
+        read_only=True,
+    )
+    klass_url = serializers.CharField(
+        source="klass.url",
+        read_only=True,
+        allow_null=True,
+    )
 
     class Meta:
         model = KlassSchedule
         fields = [
             "id",
             "klass_id",
-            "klass_urllesson",
+            "klass_url",
+            "lesson",
             "teacher",
             "day_of_week",
             "starts_at",

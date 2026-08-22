@@ -398,7 +398,7 @@ export default function KelasPage() {
                   </div>
                 </div>
 
-                {/* Duration pill */}
+                {/* Duration pill & join link */}
                 <div className="mr-auto flex items-center gap-3">
                   <span className="text-[11px] bg-[#EEF5FF] text-[#3E66A8] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">
                     {(() => {
@@ -408,6 +408,29 @@ export default function KelasPage() {
                       return `${faNum(mins)} دقیقه`;
                     })()}
                   </span>
+                  {cls.klass_url && (
+                    <a
+                      href={cls.klass_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 text-[13px] font-bold text-white px-4 py-2 rounded-[12px] bg-gradient-to-b from-[#6FA0D6] to-[#3E66A8] hover:shadow-md transition-shadow whitespace-nowrap"
+                    >
+                      <svg
+                        width="15"
+                        height="15"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polygon points="23 7 16 12 23 17 23 7" />
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                      </svg>
+                      ورود به کلاس
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
