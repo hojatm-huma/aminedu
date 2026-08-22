@@ -113,17 +113,19 @@ httpRoute:
   #       value: v2
 
 resources:
-  limits: {}
+  limits:
+    memory: 256Mi
+    cpu: 128m
   requests:
-    memory: 500Mi
-    cpu: 250m
+    memory: 256Mi
+    cpu: 128m
 
 # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-livenessProbe: {}
+livenessProbe: null
 #   httpGet:
 #     path: /
 #     port: http
-# readinessProbe:
+readinessProbe: null
 #   httpGet:
 #     path: /
 #     port: http

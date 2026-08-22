@@ -15,7 +15,7 @@ const redirectToLogin = () => {
     if (typeof window !== "undefined") {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
-        window.location.href = "/login";
+        window.location.href = "/Login";
     }
 };
 
@@ -37,8 +37,9 @@ apiClient.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
         const isRefreshCall = originalRequest?.url?.includes("/accounts/token/refresh/");
+        const isGetTokenCall = originalRequest?.url?.includes("/accounts/token/");
 
-        if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isRefreshCall) {
+        if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isRefreshCall && !isGetTokenCall) {
             originalRequest._retry = true;
 
             try {

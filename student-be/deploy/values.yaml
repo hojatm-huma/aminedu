@@ -1,9 +1,20 @@
+name: &name student-be
 # Default values for helmchart.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1
+
+# The pod mounts a ReadWriteOnce PVC, so a normal rolling update (new pod up
+# before the old one is torn down) can never attach the volume and deadlocks
+# with a "Multi-Attach error". maxUnavailable: 100% / maxSurge: 0 forces the
+# old pod to terminate (releasing the volume) before the new one is scheduled.
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 100%
+    maxSurge: 0
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
@@ -113,10 +124,12 @@ httpRoute:
   #       value: v2
 
 resources:
-  limits: {}
+  limits:
+    memory: 512Mi
+    cpu: 256m
   requests:
-    memory: 500Mi
-    cpu: 250m
+    memory: 512Mi
+    cpu: 256m
 
 # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe: null
@@ -137,17 +150,15 @@ autoscaling:
   # targetMemoryUtilizationPercentage: 80
 
 # Additional volumes on the output Deployment definition.
-volumes: []
-  # - name: foo
-  #   secret:
-  #     secretName: mysecret
-  #     optional: false
+volumes:
+  - name: *name
+    persistentVolumeClaim:
+      claimName: *name
 
 # Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
-  # - name: foo
-  #   mountPath: "/etc/foo"
-  #   readOnly: true
+volumeMounts:
+  - name: *name
+    mountPath: /data/
 
 nodeSelector: {}
 
@@ -164,10 +175,16 @@ envFrom:
 configmaps:
   - name: student-be
     data:
-      DEBUG: "True"
+      DEBUG: "False"
       ALLOWED_HOSTS: "test.aminedu.ir,api.test.aminedu.ir"
       ALLOWED_ORIGINS: "https://test.aminedu.ir,https://api.test.aminedu.ir"
       DB_NAME: student_be
       DB_USER: aminedu_app
       DB_HOST: postgres.database
       DB_PORT: "5432"
+
+persistence:
+  - name: *name
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi

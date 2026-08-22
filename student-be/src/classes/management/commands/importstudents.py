@@ -1,22 +1,15 @@
 from dataclasses import dataclass
-from django.core.management.base import BaseCommand
-from django.db import IntegrityError
+
 from accounts.models import User
-from classes.choices import FieldOfStudy, Stage, Gender
-from classes.models import Student
+from django.core.management.base import BaseCommand
 
-
-@dataclass
-class UsernameData:
-    province: str
-    last_for_digits_of_national_code: str
-    field_of_study: FieldOfStudy
-    stage: Stage
-    username: str
+from classes.choices import FieldOfStudy, Gender, Stage
+from classes.models import Klass, KlassRegistration, Student
 
 
 @dataclass
 class UserData:
+    username: str
     national_code: str
     first_name: str
     last_name: str
@@ -28,6 +21,8 @@ class UserData:
     province: str
     city: str
     village: str
+    address: str
+    postcode: str
 
 
 class Command(BaseCommand):
@@ -35,97 +30,72 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "usernames_csv",
+            "file",
             type=str,
-            help="Path to the CSV file containing usernames",
-        )
-
-        parser.add_argument(
-            "users_csv",
-            type=str,
-            help="Path to the CSV file containing user data",
+            help="Path to the CSV file students data",
         )
 
     def handle(self, *args, **options):
-        usernames_csv = options["usernames_csv"]
-        users_csv = options["users_csv"]
+        file_csv = options["file"]
 
-        usernames = self._read_username_file(usernames_csv)
-        users = self._read_user_file(users_csv)
+        users: list[UserData] = self._read_file(file_csv)
 
-        for username in usernames:
-            user = self._find_corresponding_user(
-                users,
-                username.last_for_digits_of_national_code,
-            )
-            if not user:
-                print(f"User not found for username: {username.username}")
-                continue
+        for user in users:
+            # print(f"Importing student: {user.username}")
+            # self._create_user(
+            #     username=user.username,
+            #     user=user,
+            # )
 
-            try:
-                print(f"Importing student: {username.username}")
-                self._create_user(
-                    username=username,
-                    user=user,
-                )
-            except IntegrityError as e:
-                print(f"Error creating user {username.username}: {e}")
+            print("changing password for user: ", user.username)
+            self._set_password(user.username, user.phone_number)
 
-    def _read_username_file(self, usernames_file):
-        usernames = []
-        with open(usernames_file, "r") as usernames_file:
-            for line in usernames_file.readlines()[2:]:
+    def _read_file(self, file):
+        users = []
+        with open(file, "r") as file:
+            for line in file.readlines()[2:]:
                 (
-                    province,
-                    last_for_digits_of_national_code,
-                    field,
-                    stage,
-                    username,
                     _,
-                ) = line.split(",")
+                    national_code,
+                    fname,
+                    lname,
+                    field_of_study,
+                    stage,
+                    gender,
+                    phone_number,
+                    supervisor_phone_number,
+                    province,
+                    city,
+                    village,
+                    address,
+                    postcode,
+                ) = line.split(",")[:14]
+                username = line.split(",")[-1]
                 if username.strip():
-                    usernames.append(
-                        UsernameData(
-                            last_for_digits_of_national_code=last_for_digits_of_national_code,
-                            field_of_study=self._translate_field_of_study(field),
-                            stage=self._translate_stage(stage),
+                    users.append(
+                        UserData(
                             username=username,
-                            province=province,
+                            national_code=national_code.strip(),
+                            first_name=fname.strip(),
+                            last_name=lname.strip(),
+                            field_of_study=self._translate_field_of_study(
+                                field_of_study
+                            ),
+                            stage=self._translate_stage(stage),
+                            gender=self._translate_gender(gender),
+                            phone_number=phone_number.strip(),
+                            supervisor_phone_number=supervisor_phone_number.strip(),
+                            province=province.strip(),
+                            city=city.strip(),
+                            village=village.strip(),
+                            address=address.strip(),
+                            postcode=postcode.strip(),
                         )
                     )
-            return usernames
-
-    def _read_user_file(self, users_file):
-        users = []
-        with open(users_file, "r") as users_file:
-            for line in users_file.readlines()[1:]:
-                line = line.strip().split(",")
-                users.append(
-                    UserData(
-                        national_code=line[0],
-                        first_name=line[1],
-                        last_name=line[2],
-                        field_of_study=line[3],
-                        stage=line[4],
-                        gender=self._translate_gender(line[5]),
-                        phone_number=line[6],
-                        supervisor_phone_number=line[7],
-                        province=line[8],
-                        city=line[9],
-                        village=line[10],
-                    )
-                )
-        return users
-
-    def _find_corresponding_user(self, users, last_for_digits_of_national_code):
-        for user in users:
-            if user.national_code.endswith(last_for_digits_of_national_code):
-                return user
-        return None
+            return users
 
     def _translate_field_of_study(self, field):
         return {
-            "": "",
             "ریاضی و فیزیک": FieldOfStudy.MATH,
             "علوم تجربی": FieldOfStudy.SCIENCE,
             "علوم انسانی": FieldOfStudy.HUMANITIES,
@@ -134,10 +104,9 @@ class Command(BaseCommand):
     def _translate_stage(self, stage):
         try:
             return {
-                "دهم": Stage.TENTH,
-                "یازدهم": Stage.ELEVENTH,
-                "دوازدهم": Stage.TWELFTH,
-                "فارغ التحصیل": Stage.GRADUATED,
+                "مهر ماه وارد پایۀ یازدهم می‌شوم.": Stage.ELEVENTH,
+                "مهر ماه وارد پایۀ دوازدهم می‌شوم.": Stage.TWELFTH,
+                "دانش‌آموخته (پشت کنکوری) هستم.": Stage.GRADUATED,
             }[stage]
         except KeyError:
             print(f"Unknown stage: {stage}")
@@ -148,9 +117,18 @@ class Command(BaseCommand):
             "دختر": Gender.FEMALE,
         }[gender]
 
-    def _create_user(self, username: UsernameData, user: UserData):
+    def _set_password(self, username: str, phone_number: str):
+        phone_number_without_zero = phone_number
+        if phone_number[0] == "0":
+            phone_number_without_zero = phone_number[1:]
+
+        user = User.objects.get(username=username)
+        user.set_password(phone_number_without_zero)
+        user.save()
+
+    def _create_user(self, username: str, user: UserData):
         user_instance, _ = User.objects.update_or_create(
-            username=username.username,
+            username=username,
             defaults={
                 "first_name": user.first_name,
                 "last_name": user.last_name,
@@ -158,17 +136,29 @@ class Command(BaseCommand):
         )
         user_instance.set_password(user.phone_number)
         user_instance.save()
-        Student.objects.update_or_create(
+        student, _ = Student.objects.update_or_create(
             user=user_instance,
             defaults={
                 "national_code": user.national_code,
-                "field_of_study": username.field_of_study,
-                "stage": username.stage,
+                "field_of_study": user.field_of_study,
+                "stage": user.stage,
                 "gender": user.gender,
                 "phone_number": user.phone_number,
                 "supervisor_phone_number": user.supervisor_phone_number,
                 "province": user.province,
                 "city": user.city,
                 "village": user.village,
+                "address": user.address,
+                "postcode": user.postcode,
             },
         )
+
+        klasses = Klass.objects.filter(
+            lesson__field_of_study=user.field_of_study,
+            lesson__stage=user.stage,
+        )
+        for klass in klasses:
+            KlassRegistration.objects.get_or_create(
+                student=student,
+                klass=klass,
+            )

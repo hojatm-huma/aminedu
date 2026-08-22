@@ -96,7 +96,6 @@ class Student(BaseModel):
 class Lesson(BaseModel):
     name = models.CharField(
         max_length=100,
-        unique=True,
         blank=False,
         null=False,
         verbose_name=_("Lesson Name"),
@@ -129,6 +128,11 @@ class Klass(BaseModel):
         on_delete=models.CASCADE,
         related_name="classes",
         verbose_name=_("Teacher"),
+    )
+
+    url = models.URLField(
+        blank=True,
+        null=True,
     )
 
     def __str__(self):
