@@ -69,14 +69,6 @@ export default function KelasPage() {
   const { getSchedule } = useClasses();
   const [role, setRole] = useState<"student" | "teacher" | null>(null);
   const [classes, setClasses] = useState<KlassSchedule[]>([]);
-  const [showAddModal, setShowAddModal] = useState(false);
-
-  // New class form state
-  const [lessonName, setLessonName] = useState("");
-  const [teacherName, setTeacherName] = useState("");
-  const [startsAt, setStartsAt] = useState("08:00");
-  const [endsAt, setEndsAt] = useState("09:30");
-  const [dayOfWeek, setDayOfWeek] = useState(0);
 
   useEffect(() => {
     const savedRole = localStorage.getItem("role");

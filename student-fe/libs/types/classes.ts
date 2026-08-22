@@ -56,6 +56,7 @@ export type ExerciseDetail = {
 export type KlassSchedule = {
     id: number;
     klass_id: number;
+    klass_url: string;
     lesson: string;
     teacher: string;
     day_of_week: number; // 0=Saturday … 6=Friday
