@@ -1,4 +1,5 @@
 from rest_framework import serializers
+
 from classes.models import (
     Exercise,
     ExerciseComment,
@@ -14,13 +15,14 @@ class KlassScheduleSerializer(serializers.ModelSerializer):
     klass_id = serializers.IntegerField(source="klass.id", read_only=True)
     lesson = serializers.CharField(source="klass.lesson.name", read_only=True)
     teacher = serializers.CharField(source="klass.teacher.full_name", read_only=True)
+    klass_url = serializers.CharField(source="klass.url")
 
     class Meta:
         model = KlassSchedule
         fields = [
             "id",
             "klass_id",
-            "lesson",
+            "klass_urllesson",
             "teacher",
             "day_of_week",
             "starts_at",
